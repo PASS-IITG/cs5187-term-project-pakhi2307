@@ -1,0 +1,61 @@
+{
+  "root": "/home/student/cs5187-term-project-pakhi2307/sqlite-src",
+  "files": [
+    {
+      "file": "src/tokenize.c",
+      "status": "ok",
+      "errors": 0,
+      "first_errors": [],
+      "functions_in_tu": 18
+    },
+    {
+      "file": "parse.c",
+      "status": "ok",
+      "errors": 0,
+      "first_errors": [],
+      "functions_in_tu": 26
+    },
+    {
+      "file": "src/vdbe.c",
+      "status": "ok",
+      "errors": 0,
+      "first_errors": [],
+      "functions_in_tu": 17
+    },
+    {
+      "file": "src/vdbeapi.c",
+      "status": "ok",
+      "errors": 0,
+      "first_errors": [],
+      "functions_in_tu": 115
+    },
+    {
+      "file": "src/vdbemem.c",
+      "status": "ok",
+      "errors": 0,
+      "first_errors": [],
+      "functions_in_tu": 60
+    },
+    {
+      "file": "src/prepare.c",
+      "status": "ok",
+      "errors": 0,
+      "first_errors": [],
+      "functions_in_tu": 25
+    }
+  ],
+  "graph": {
+    "types": 85,
+    "fields": 913,
+    "functions_defined": 225,
+    "indirect_calls_unresolved": 36,
+    "call_sites": 1141,
+    "field_type_links": 195,
+    "boundary_functions": 281,
+    "nodes_total": 1504,
+    "edges_total": 2249
+  },
+  "files_ok": 6,
+  "files_total": 6,
+  "seconds": 3.8
+}

@@ -2,3 +2,7 @@ venv/
 sqlite-src/
 __pycache__/
 *.db
+*.db
+venv/
+sqlite-src/
+__pycache__/
