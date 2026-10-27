@@ -14,3 +14,15 @@
 -Test 1 (JSON), attempt 2 (timeout_s 300, 1 rep x 5 questions, stopped early): 3 calls finished with 22,163 / 20,046 / 6,586 completion tokens and 204 / 217 / 60 s latency; 1 attempt timed out at 300 s; run stopped by hand. JSON validity not measured.
 -Conclusion: passes the tool pilot but is too slow and token-heavy on single-shot JSON answers (roughly 10x ultra's median of ~2,100 tokens). Not pinned. Retest if a way to limit thinking is found [VERIFY].
 -Pilot limitation: p1 and p2 cannot be answered with the three pilot tools, so tool-loop pass rates reflect the pilot design as much as the model.
+## Agent-loop comparison, 27 Oct 2026 (ONE run per model, SYN graph at 3.30.1, variant full)
+Question: pilot p3 (OOB read during execution, entry sqlite3_step). No gold answer; correctness not assessed.
+| | nemotron-3-ultra-550b-a55b | nemotron-3.5-super-vl-120b-a12b (timeout_s 300) |
+|---|---|---|
+| stopped_by | iteration_cap (15 turns), no final answer | final, 6 turns |
+| tool calls | search_functions, get_function_source only | 11: search 4, source 4, get_callees 3 |
+| prompt tokens | 352,029 | 39,023 |
+| completion tokens | 1,106 | 15,352 |
+| wall time | 37 s | 110 s |
+| JSON problems | n/a | none |
+| cited edges in graph | n/a | 2 of 2 (sqlite3_step->sqlite3Step, sqlite3Step->sqlite3VdbeExec) |
+Not concluded: n=1 per model. Model not changed (D17 still provisional: ultra).
