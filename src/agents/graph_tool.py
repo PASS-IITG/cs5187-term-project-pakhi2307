@@ -1,0 +1,84 @@
+"""Graph-as-tool agent (design doc D12). The same loop serves SYN and CT: only db_path differs."""
+import argparse, json, os, sys, time
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+SRC = os.path.dirname(HERE)
+sys.path.insert(0, HERE)
+sys.path.insert(0, SRC)
+from answer import SPEC, parse_final, hard   # noqa: E402
+from tools import graph_tools                # noqa: E402
+
+SUPPORT = {"get_function_source", "search_functions"}   # on in every variant (D9, D16)
+ABLATIONS = {
+    "ct_calls": {"get_callers", "get_callees"},
+    "ct_types": {"get_callers", "get_callees", "get_type_hierarchy"},
+    "full": None,            # every tool the graph offers
+    "source_only": set(),    # control: support tools only
+}
+# The last sentence is the stop rule added in the pilot (an ADD to disclose; identical for SYN-TOOL and CT-TOOL).
+TOOL_PROMPT = ("\n\nYou have tools to query a graph of this code and to read function source. "
+               "Verify every edge with a tool before asserting it. Cite only edges returned by tools. "
+               "If a name is unknown, call search_functions instead of guessing. "
+               "If the tools cannot identify the responsible function, give your best guess and finish.\n\n")
+
+
+def run_tool_agent(llm, question, db_path, root, variant="full", max_turns=15, **meta):
+    allowed = None if ABLATIONS[variant] is None else ABLATIONS[variant] | SUPPORT
+    tools = [{"type": "function", "function": s} for s in graph_tools.schemas(db_path, allowed)]
+    msgs = [{"role": "user", "content": question + TOOL_PROMPT + SPEC}]
+    t0 = time.time()
+    pt = ct = n_calls = turns = 0
+    stopped, text = "iteration_cap", ""
+    for turn in range(max_turns):
+        r = llm.chat(msgs, tools=tools, turn=turn, **meta)
+        m = r["message"]
+        msgs.append(m)
+        turns = turn + 1
+        pt += r["usage"]["prompt_tokens"]
+        ct += r["usage"]["completion_tokens"]
+        calls = m.get("tool_calls") or []
+        if not calls:
+            stopped, text = "final", m.get("content") or ""
+            break
+        for c in calls:
+            n_calls += 1
+            name = c["function"]["name"]
+            try:
+                args = json.loads(c["function"].get("arguments") or "{}")
+                out = graph_tools.dispatch(db_path, name, args, root, allowed)
+            except ValueError as e:
+                out = {"error": "BAD_ARGUMENTS", "detail": str(e)}
+            msgs.append({"role": "tool", "tool_call_id": c["id"],
+                         "content": json.dumps(out, ensure_ascii=False)})
+    return {"final_text": text, "stopped_by": stopped, "turns": turns, "tool_calls": n_calls,
+            "prompt_tokens": pt, "completion_tokens": ct,
+            "latency_s": round(time.time() - t0, 3), "variant": variant, "trace": msgs}
+
+
+def run_record(question_id, condition, res, model):
+    """One line for runs.jsonl. Field names are a CONTRACT with the verifier."""
+    return {"question_id": question_id, "condition": condition, "final_text": res["final_text"],
+            "prompt_tokens": res["prompt_tokens"], "completion_tokens": res["completion_tokens"],
+            "latency_s": res["latency_s"], "turns": res["turns"], "tool_calls": res["tool_calls"],
+            "stopped_by": res["stopped_by"], "model": model, "ts": int(time.time())}
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--db", required=True)
+    ap.add_argument("--root", default="sqlite-src")
+    ap.add_argument("--variant", default="full", choices=list(ABLATIONS))
+    ap.add_argument("--question", required=True)
+    a = ap.parse_args()
+    from llm import LLM
+    res = run_tool_agent(LLM(), a.question, a.db, a.root, a.variant, question_id="smoke")
+    os.makedirs("logs", exist_ok=True)
+    json.dump(res["trace"], open(f"logs/agent_trace_{a.variant}.json", "w"), ensure_ascii=False, indent=1)
+    obj, probs = parse_final(res["final_text"])
+    print({k: v for k, v in res.items() if k not in ("trace", "final_text")})
+    print("parsed:", obj)
+    print("problems:", probs, "| hard:", hard(probs))
+
+
+if __name__ == "__main__":
+    main()
