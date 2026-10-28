@@ -23,6 +23,7 @@ import sys
 from collections import defaultdict, deque
 
 MAX_ITEMS = 50
+MAX_SOURCE_CHARS = 8000          # one cap for get_function_source, identical for every graph (about 2,500 tokens)
 DEFAULT_ROOT = "sqlite-src"
 _CACHE = {}
 
@@ -184,8 +185,18 @@ def get_function_source(db_path, function_name, root=DEFAULT_ROOT):
         later = sorted(x["line"] for x in g.nodes.values()
                        if x["kind"] == "function" and x["file"] == n["file"] and x["line"] and x["line"] > n["line"])
         end = later[0] - 1 if later else n["line"] + 80
-    text = "\n".join(f"{i}: {lines[i - 1]}" for i in range(n["line"], min(end, len(lines)) + 1))
-    return {"result": text[:60000], "truncated": len(text) > 60000, "file": n["file"], "start_line": n["line"]}
+    last, shown, used = min(end, len(lines)), [], 0
+    for i in range(n["line"], last + 1):                  # whole lines only, up to MAX_SOURCE_CHARS characters
+        row = f"{i}: {lines[i - 1]}"
+        if used + len(row) + 1 > MAX_SOURCE_CHARS and shown:
+            break
+        shown.append(row)
+        used += len(row) + 1
+    cut = n["line"] + len(shown) - 1 < last
+    if cut:
+        shown.append(f"/* ... truncated: showing lines {n['line']}-{n['line'] + len(shown) - 1} of {n['line']}-{last} */")
+    return {"result": "\n".join(shown), "truncated": cut, "file": n["file"], "start_line": n["line"],
+            "total_lines": last - n["line"] + 1}
 
 
 def search_functions(db_path, substring, limit=20):
