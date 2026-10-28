@@ -42,20 +42,41 @@
       "errors": 0,
       "first_errors": [],
       "functions_in_tu": 25
+    },
+    {
+      "file": "src/select.c",
+      "status": "ok",
+      "errors": 0,
+      "first_errors": [],
+      "functions_in_tu": 81
+    },
+    {
+      "file": "src/resolve.c",
+      "status": "ok",
+      "errors": 0,
+      "first_errors": [],
+      "functions_in_tu": 30
+    },
+    {
+      "file": "src/expr.c",
+      "status": "ok",
+      "errors": 0,
+      "first_errors": [],
+      "functions_in_tu": 140
     }
   ],
   "graph": {
-    "types": 85,
-    "fields": 913,
-    "functions_defined": 225,
-    "indirect_calls_unresolved": 36,
-    "call_sites": 1141,
-    "field_type_links": 195,
-    "boundary_functions": 281,
-    "nodes_total": 1504,
-    "edges_total": 2249
+    "types": 92,
+    "fields": 943,
+    "functions_defined": 458,
+    "indirect_calls_unresolved": 37,
+    "call_sites": 2695,
+    "field_type_links": 203,
+    "boundary_functions": 345,
+    "nodes_total": 1838,
+    "edges_total": 3841
   },
-  "files_ok": 6,
-  "files_total": 6,
-  "seconds": 3.8
+  "files_ok": 9,
+  "files_total": 9,
+  "seconds": 5.8
 }

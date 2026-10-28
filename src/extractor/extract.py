@@ -20,7 +20,7 @@ from collections import defaultdict
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = "sqlite-src"
-FILES = ["src/tokenize.c", "parse.c", "src/vdbe.c", "src/vdbeapi.c", "src/vdbemem.c", "src/prepare.c"]
+FILES = ["src/tokenize.c", "parse.c", "src/vdbe.c", "src/vdbeapi.c", "src/vdbemem.c", "src/prepare.c", "src/select.c", "src/resolve.c", "src/expr.c"]
 CORE = {"tokenize.c", "parse.c", "vdbe.c", "vdbeapi.c", "vdbemem.c"}      # in_scope=1. prepare.c is ring-1 (in_scope=0)
 OUT = "src/graphs/graph_ct_v1.db"
 SCHEMA = os.path.join(HERE, "..", "graphs", "schema.sql")

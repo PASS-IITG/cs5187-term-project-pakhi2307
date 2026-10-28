@@ -1,0 +1,3 @@
+K=4: 35 taint edges
+K=6: 93 taint edges
+K=8: 229 taint edges
