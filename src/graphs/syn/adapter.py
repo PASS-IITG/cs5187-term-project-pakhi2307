@@ -2,7 +2,7 @@
 """graphify graph.json -> graph_syn.db, same two-table schema as graph_ct (src/graphs/schema.sql)."""
 import argparse, collections, json, os, re, sqlite3
 
-CORE = {"src/tokenize.c", "parse.c", "src/vdbe.c", "src/vdbeapi.c", "src/vdbemem.c"}
+CORE = {"src/tokenize.c", "parse.c", "src/vdbe.c", "src/vdbeapi.c", "src/vdbemem.c", "src/prepare.c", "src/select.c", "src/resolve.c", "src/walker.c", "src/func.c", "src/printf.c"}
 
 def brace_end(lines, start):
     """1-based start line of a definition -> 1-based line of its closing brace, or None."""
