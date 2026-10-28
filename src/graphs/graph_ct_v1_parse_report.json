@@ -58,25 +58,39 @@
       "functions_in_tu": 30
     },
     {
-      "file": "src/expr.c",
+      "file": "src/walker.c",
       "status": "ok",
       "errors": 0,
       "first_errors": [],
-      "functions_in_tu": 140
+      "functions_in_tu": 13
+    },
+    {
+      "file": "src/func.c",
+      "status": "ok",
+      "errors": 0,
+      "first_errors": [],
+      "functions_in_tu": 62
+    },
+    {
+      "file": "src/printf.c",
+      "status": "ok",
+      "errors": 0,
+      "first_errors": [],
+      "functions_in_tu": 36
     }
   ],
   "graph": {
-    "types": 92,
-    "fields": 943,
-    "functions_defined": 458,
-    "indirect_calls_unresolved": 37,
-    "call_sites": 2695,
-    "field_type_links": 203,
-    "boundary_functions": 345,
-    "nodes_total": 1838,
-    "edges_total": 3841
+    "types": 94,
+    "fields": 954,
+    "functions_defined": 417,
+    "indirect_calls_unresolved": 40,
+    "call_sites": 2438,
+    "field_type_links": 201,
+    "boundary_functions": 392,
+    "nodes_total": 1857,
+    "edges_total": 3593
   },
-  "files_ok": 9,
-  "files_total": 9,
-  "seconds": 5.8
+  "files_ok": 11,
+  "files_total": 11,
+  "seconds": 6.3
 }

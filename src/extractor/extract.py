@@ -20,8 +20,12 @@ from collections import defaultdict
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = "sqlite-src"
-FILES = ["src/tokenize.c", "parse.c", "src/vdbe.c", "src/vdbeapi.c", "src/vdbemem.c", "src/prepare.c", "src/select.c", "src/resolve.c", "src/expr.c"]
-CORE = {"tokenize.c", "parse.c", "vdbe.c", "vdbeapi.c", "vdbemem.c"}      # in_scope=1. prepare.c is ring-1 (in_scope=0)
+FILES = [
+    "src/tokenize.c", "parse.c", "src/vdbe.c", "src/vdbeapi.c", "src/vdbemem.c",
+    "src/prepare.c",
+    "src/select.c", "src/resolve.c", "src/walker.c", "src/func.c", "src/printf.c",
+]
+CORE = {"tokenize.c", "parse.c", "vdbe.c", "vdbeapi.c", "vdbemem.c"}      # core files; in_scope=1 for ALL shared-list files, 0 only for external/boundary nodes
 OUT = "src/graphs/graph_ct_v1.db"
 SCHEMA = os.path.join(HERE, "..", "graphs", "schema.sql")
 
@@ -146,7 +150,7 @@ class Builder:
         rel = self.rel(f["file"])
         self.nodes[f["usr"]] = dict(
             kind="function", name=f["name"], file=rel, line=f["line"], signature=f["signature"], end_line=f["end_line"],
-            usr=f["usr"], in_scope=1 if os.path.basename(rel) in CORE else 0, defined=True,
+            usr=f["usr"], in_scope=1, defined=True,
             meta={"params": f["params"], "graph_source": "clang", "assigns": f["assigns"],
                   "indirect_calls": f["indirect"]})
         self.stats["functions_defined"] += 1
@@ -168,7 +172,7 @@ class Builder:
         if old is not None and old["defined"]:
             return
         rel = self.rel(t["file"])
-        scope = 1 if os.path.basename(rel) in CORE else 0
+        scope = 1
         self.nodes[t["usr"]] = dict(kind="type", name=t["name"], file=rel, line=t["line"],
                                     signature=f"{t['tkind']} {t['name']}", end_line=t["end_line"], usr=t["usr"],
                                     in_scope=scope, defined=True, meta={"graph_source": "clang", "tkind": t["tkind"]})

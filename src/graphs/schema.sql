@@ -11,7 +11,7 @@ CREATE TABLE nodes (
   signature TEXT,
   end_line INTEGER,
   usr TEXT UNIQUE,  -- Clang unique symbol id: keeps two static functions with the same name apart
-  in_scope INTEGER, -- 1 = defined in one of the five core files, 0 = ring-1 / header / external
+  in_scope INTEGER, -- 1 = defined in one of the shared analysed files (core or ring-1), 0 = external/boundary
   meta TEXT         -- JSON: params, is_external, graph_source, assigns, indirect_calls
 );
 CREATE TABLE edges (

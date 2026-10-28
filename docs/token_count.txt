@@ -10,8 +10,10 @@ src/vdbemem.c   core        1889     18773
 src/prepare.c   ring-1       937      9348
 src/select.c    ring-1      6716     71735
 src/resolve.c   ring-1      1825     18490
-src/expr.c      ring-1      5658     58816
+src/walker.c    ring-1       208      2000
+src/func.c      ring-1      2026     18891
+src/printf.c    ring-1      1297     12017
 
 core files only:               216371
 original six files:            225719   (compare with the earlier 84,438)
-all 9 files in the graph:       374760
+all 11 files in the graph:       348852
