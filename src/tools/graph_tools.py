@@ -17,6 +17,7 @@ CLI test:  python src/tools/graph_tools.py --db src/graphs/graph_ct_v1.db --call
 """
 import argparse
 import json
+import re
 import os
 import sqlite3
 import sys
@@ -63,17 +64,22 @@ class _G:
         n = self.nodes[i]
         return f"{n['file']}:{n['name']}" if n["name"] in self.dup and n["file"] else n["name"]
 
+    _FILE_PREFIX = re.compile(r"^(?P<f>[\w./+\-]+\.\w+):(?!:)(?P<n>.+)$")   # "file.cxx:Name"; "A::b" is NOT a file prefix
+
     def find(self, name, kind="function"):
-        if ":" in name:
-            f, nm = name.rsplit(":", 1)
-            ids = [i for i in self.by_name.get(nm, []) if self.nodes[i]["kind"] == kind
-                   and (self.nodes[i]["file"] or "").endswith(f)]
-        else:
-            ids = [i for i in self.by_name.get(name, []) if self.nodes[i]["kind"] == kind]
+        m = self._FILE_PREFIX.match(name)
+        f, nm = (m.group("f"), m.group("n")) if m else (None, name)
+        ids = [i for i in self.by_name.get(nm, []) if self.nodes[i]["kind"] == kind]
+        if not ids and "::" not in nm:          # C++: a bare method name matches Class::name
+            ids = [i for k, v in self.by_name.items() if k.endswith("::" + nm) for i in v
+                   if self.nodes[i]["kind"] == kind]
+        if f:
+            ids = [i for i in ids if (self.nodes[i]["file"] or "").endswith(f)]
         return sorted(ids)
 
     def suggest(self, name, kind="function", n=5):
-        low = name.rsplit(":", 1)[-1].lower()
+        m = self._FILE_PREFIX.match(name)
+        low = (m.group("n") if m else name).lower()
         return sorted({x["name"] for x in self.nodes.values() if x["kind"] == kind and low in x["name"].lower()})[:n]
 
 
@@ -167,7 +173,9 @@ def get_taint_paths(db_path, source_param):
     return _cap(rows)
 
 
-def get_function_source(db_path, function_name, root=DEFAULT_ROOT):
+def get_function_source(db_path, function_name, root=DEFAULT_ROOT, start_line=None, end_line=None):
+    """Source of a function with line numbers. Output is capped at MAX_SOURCE_CHARS; when cut, the result says so and
+    gives next_start_line, so the caller can continue with start_line=next_start_line (absolute file line numbers)."""
     g = _g(db_path)
     ids = g.find(function_name)
     if not ids:
@@ -185,18 +193,29 @@ def get_function_source(db_path, function_name, root=DEFAULT_ROOT):
         later = sorted(x["line"] for x in g.nodes.values()
                        if x["kind"] == "function" and x["file"] == n["file"] and x["line"] and x["line"] > n["line"])
         end = later[0] - 1 if later else n["line"] + 80
-    last, shown, used = min(end, len(lines)), [], 0
-    for i in range(n["line"], last + 1):                  # whole lines only, up to MAX_SOURCE_CHARS characters
+    first, last = n["line"], min(end, len(lines))
+    try:
+        lo = max(first, int(start_line)) if start_line is not None else first
+        hi = min(last, int(end_line)) if end_line is not None else last
+    except (TypeError, ValueError):
+        return {"error": "BAD_ARGUMENTS", "detail": "start_line and end_line must be integers"}
+    if lo > hi:
+        return {"error": "LINE_OUT_OF_RANGE", "function_first_line": first, "function_last_line": last}
+    shown, used = [], 0
+    for i in range(lo, hi + 1):                           # whole lines only, up to MAX_SOURCE_CHARS characters
         row = f"{i}: {lines[i - 1]}"
         if used + len(row) + 1 > MAX_SOURCE_CHARS and shown:
             break
         shown.append(row)
         used += len(row) + 1
-    cut = n["line"] + len(shown) - 1 < last
+    reached = lo + len(shown) - 1
+    cut = reached < hi
     if cut:
-        shown.append(f"/* ... truncated: showing lines {n['line']}-{n['line'] + len(shown) - 1} of {n['line']}-{last} */")
-    return {"result": "\n".join(shown), "truncated": cut, "file": n["file"], "start_line": n["line"],
-            "total_lines": last - n["line"] + 1}
+        shown.append(f"/* truncated: lines {lo}-{reached} shown; the function spans lines {first}-{last} "
+                     f"({last - first + 1} lines); call again with start_line={reached + 1} to continue */")
+    return {"result": "\n".join(shown), "truncated": cut, "file": n["file"], "start_line": lo,
+            "last_line_shown": reached, "function_first_line": first, "function_last_line": last,
+            "total_lines": last - first + 1, "next_start_line": reached + 1 if cut else None}
 
 
 def search_functions(db_path, substring, limit=20):
@@ -208,7 +227,7 @@ def search_functions(db_path, substring, limit=20):
 
 # ------------------------------------------------------------------ for the agent loop
 def _obj(**props):
-    return {"type": "object", "properties": props, "required": [k for k in props if k not in ("max_hops", "limit")]}
+    return {"type": "object", "properties": props, "required": [k for k in props if k not in ("max_hops", "limit", "start_line", "end_line")]}
 
 
 _S = {"type": "string"}
@@ -221,7 +240,7 @@ TOOL_SCHEMAS = {
                        _obj(entry_function=_S, target_function=_S, max_hops={"type": "integer"})),
     "get_taint_paths": ("Given a source parameter (e.g. 'zSql'), list sink functions that data from it can reach, "
                         "each with its call path.", _obj(source_param=_S)),
-    "get_function_source": ("Return the source code of a function with line numbers.", _obj(function_name=_S)),
+    "get_function_source": ("Return the source code of a function with line numbers. Long functions are returned in parts: when the result says truncated, call again with start_line set to next_start_line. start_line and end_line are absolute file line numbers and are optional.", _obj(function_name=_S, start_line={"type": "integer"}, end_line={"type": "integer"})),
     "search_functions": ("Find function names containing a substring (case-insensitive). Use this instead of "
                          "guessing a name.", _obj(substring=_S, limit={"type": "integer"})),
 }
