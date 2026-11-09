@@ -95,7 +95,8 @@ class LLM:
         msg.setdefault("role", "assistant")
         u = r.usage
         usage = {"prompt_tokens": getattr(u, "prompt_tokens", 0) or 0,
-                 "completion_tokens": getattr(u, "completion_tokens", 0) or 0}
+                 "completion_tokens": getattr(u, "completion_tokens", 0) or 0,
+                 "reasoning_tokens": getattr(getattr(u, "completion_tokens_details", None), "reasoning_tokens", 0) or 0}
         return msg, usage, r.choices[0].finish_reason, getattr(r, "model", self.model)
 
     # ---------- public API ----------
@@ -119,6 +120,7 @@ class LLM:
                            "total_latency_s": round(time.time() - t_start, 3),
                            "prompt_tokens": usage["prompt_tokens"],
                            "completion_tokens": usage["completion_tokens"],
+                           "reasoning_tokens": usage.get("reasoning_tokens", 0),
                            "finish_reason": finish, "n_tools": len(tools or []),
                            **meta})
                 return {"message": msg, "usage": usage, "latency_s": lat,

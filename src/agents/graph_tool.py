@@ -22,6 +22,12 @@ TOOL_PROMPT = ("\n\nYou have tools to query a graph of this code and to read fun
                "If the tools cannot identify the responsible function, give your best guess and finish.\n\n")
 
 
+# Harness rule (CONTRACT CHANGE 3 Nov, identical for SYN-TOOL and CT-TOOL): when the turn cap is reached without a
+# final answer, one extra call WITHOUT tools asks for the final JSON. Such runs get stopped_by "forced_final".
+FORCE_PROMPT = ("You have used all your tool turns. Do not call any more tools. Using only what you have retrieved so far, "
+                "give your final answer now as the single JSON object described above. If you are unsure, give your best guess.")
+
+
 def run_tool_agent(llm, question, db_path, root, variant="full", max_turns=15, **meta):
     allowed = None if ABLATIONS[variant] is None else ABLATIONS[variant] | SUPPORT
     tools = [{"type": "function", "function": s} for s in graph_tools.schemas(db_path, allowed)]
@@ -50,6 +56,15 @@ def run_tool_agent(llm, question, db_path, root, variant="full", max_turns=15, *
                 out = {"error": "BAD_ARGUMENTS", "detail": str(e)}
             msgs.append({"role": "tool", "tool_call_id": c["id"],
                          "content": json.dumps(out, ensure_ascii=False)})
+    if stopped == "iteration_cap":
+        msgs.append({"role": "user", "content": FORCE_PROMPT})
+        r = llm.chat(msgs, tools=None, turn=max_turns, **meta)
+        m = r["message"]
+        msgs.append(m)
+        pt += r["usage"]["prompt_tokens"]
+        ct += r["usage"]["completion_tokens"]
+        text = m.get("content") or ""
+        stopped = "forced_final"
     return {"final_text": text, "stopped_by": stopped, "turns": turns, "tool_calls": n_calls,
             "prompt_tokens": pt, "completion_tokens": ct,
             "latency_s": round(time.time() - t0, 3), "variant": variant, "trace": msgs}
@@ -69,9 +84,10 @@ def main():
     ap.add_argument("--root", default="sqlite-src")
     ap.add_argument("--variant", default="full", choices=list(ABLATIONS))
     ap.add_argument("--question", required=True)
+    ap.add_argument("--config", default="config.yaml")
     a = ap.parse_args()
     from llm import LLM
-    res = run_tool_agent(LLM(), a.question, a.db, a.root, a.variant, question_id="smoke")
+    res = run_tool_agent(LLM(config_path=a.config), a.question, a.db, a.root, a.variant, question_id="smoke")
     os.makedirs("logs", exist_ok=True)
     json.dump(res["trace"], open(f"logs/agent_trace_{a.variant}.json", "w"), ensure_ascii=False, indent=1)
     obj, probs = parse_final(res["final_text"])
