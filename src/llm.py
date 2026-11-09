@@ -30,6 +30,7 @@ class LLM:
         c = self.cfg
         self.model = c["model"]
         self.temperature = c.get("temperature", 0)
+        self.extra_body = c.get("extra_body")
         self.mock = bool(c.get("mock")) or os.getenv("LLM_MOCK") == "1"
         self.max_retries = c.get("max_retries", 6)
         self.base_backoff = c.get("base_backoff_s", 2)
@@ -81,6 +82,8 @@ class LLM:
     # ---------- real call ----------
     def _real_call(self, messages, tools, max_tokens):
         kw = dict(model=self.model, messages=self._clean(messages), temperature=self.temperature)
+        if self.extra_body:
+            kw["extra_body"] = self.extra_body
         if tools:
             kw["tools"] = tools
         if max_tokens:
