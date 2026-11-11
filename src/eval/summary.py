@@ -4,7 +4,7 @@ from answer import parse_final, hard
 CSV = os.path.expanduser("~/cs5187/benchmark_work/questions.csv")
 gt = {r["id"]: r["ground_truth_function"] for r in csv.DictReader(open(CSV, encoding="utf-8"))}
 qids = sorted(gt)
-CONDS = ["NOCTX", "SYN-TOOL", "CT-TOOL"]
+CONDS = ["NOCTX", "SYN-TOOL", "CT-TOOL", "SYN-TEXT", "CT-TEXT"]
 
 def load(p):
     by = collections.defaultdict(list)
@@ -22,7 +22,7 @@ for p in sorted(glob.glob("results/runs_*.jsonl")):
     by = load(p)
     flagged = [q for q in qids if sum(x["ans"] == gt[q] for x in by.get((q, "NOCTX"), [])) >= 2]
     out += [f"## {model}", "", "Cells are exact (answer in top 3), as correct/runs.", "",
-            "| Q | ground truth | NOCTX | SYN-TOOL | CT-TOOL |", "|---|---|---|---|---|"]
+            "| Q | ground truth | " + " | ".join(CONDS) + " |", "|---" * (len(CONDS) + 2) + "|"]
     for q in qids:
         cells = []
         for c in CONDS:
@@ -50,6 +50,6 @@ for p in sorted(glob.glob("results/runs_*.jsonl")):
                    f"{m('turns'):.1f} | {m('tool_calls'):.1f} | {m('prompt_tokens'):.0f} | {m('completion_tokens'):.0f} | {m('latency_s'):.0f} |")
     out.append("")
 out += ["Notes: 6 questions; one run per tool condition; NOCTX = 3 sampled repeats (temperature 0.7). A question is flagged if the",
-        "no-context answer is exact in 2 of 3 repeats. TEXT conditions and path verification are not included yet."]
+        "no-context answer is exact in 2 of 3 repeats. Path verification is not included (final answer only). TEXT = graph_slice, budget ceiling 6,000 tokens (slices end below it unless cut)."]
 open("results/summary.md", "w", encoding="utf-8").write("\n".join(out) + "\n")
 print("\n".join(out))

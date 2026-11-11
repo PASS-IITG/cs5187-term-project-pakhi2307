@@ -11,7 +11,9 @@ from llm import LLM, LLMError, load_config            # noqa: E402
 from answer import SPEC, parse_final                   # noqa: E402
 from graph_tool import run_tool_agent, run_record      # noqa: E402
 
-DBS = {"SYN-TOOL": "src/graphs/graph_syn.db", "CT-TOOL": "src/graphs/graph_ct_v2.db"}
+from tools.graph_slice import graph_slice              # noqa: E402
+DBS = {"SYN-TOOL": "src/graphs/graph_syn.db", "CT-TOOL": "src/graphs/graph_ct_v2.db",
+       "SYN-TEXT": "src/graphs/graph_syn.db", "CT-TEXT": "src/graphs/graph_ct_v2.db"}
 NOCTX_PREFIX = ("The following question is about the SQLite database engine source code. "
                 "No code and no tools are provided. Answer from your own knowledge.\n\n")
 
@@ -35,6 +37,21 @@ def run_noctx(llm, qtext, qid, max_tokens):
             "latency_s": round(time.time() - t0, 3)}
 
 
+def run_text(llm, q, db, max_tokens, budget):
+    t0 = time.time()
+    try:
+        sl = graph_slice(db, q["entry_function"], budget_tokens=budget)["text"]
+    except Exception as e:
+        raise LLMError("slice failed: " + repr(e)[:150])
+    prompt = ("Below is a slice of a graph of this program (functions and call edges) around the entry function.\n\n"
+              + sl + "\n\n" + q["question"] + "\n\n" + SPEC)
+    r = llm.chat([{"role": "user", "content": prompt}], tools=None, max_tokens=max_tokens,
+                 question_id=q["id"], variant="text")
+    return {"final_text": r["message"].get("content") or "", "stopped_by": r["finish_reason"],
+            "turns": 1, "tool_calls": 0, "prompt_tokens": r["usage"]["prompt_tokens"],
+            "completion_tokens": r["usage"]["completion_tokens"], "latency_s": round(time.time() - t0, 3)}
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--config", required=True)
@@ -45,6 +62,7 @@ def main():
     ap.add_argument("--noctx-reps", type=int, default=3)
     ap.add_argument("--noctx-temp", type=float, default=0.7)
     ap.add_argument("--max-tokens", type=int, default=3000)
+    ap.add_argument("--budget", type=int, default=6000)
     ap.add_argument("--out", default="")
     a = ap.parse_args()
 
@@ -78,6 +96,8 @@ def main():
                 try:
                     if cond == "NOCTX":
                         res = run_noctx(llm_nc, q["question"], q["id"], a.max_tokens)
+                    elif cond.endswith("-TEXT"):
+                        res = run_text(llm, q, DBS[cond], a.max_tokens, a.budget)
                     else:
                         res = run_tool_agent(llm, q["question"], DBS[cond], a.root, "full",
                                              question_id=q["id"])
