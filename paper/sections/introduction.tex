@@ -37,25 +37,29 @@ fault-localisation benchmark questions.
 \begin{description}
   \item[\textbf{RQ1}] Does call-graph context (tool or text) improve
     fault-localisation accuracy over a no-context baseline?
-  \item[\textbf{RQ2}] Does tool-based graph navigation yield higher accuracy
+  \item[\textbf{RQ2}] Does compiler-grade compile-time (Clang) extraction
+    outperform syntactic (tree-sitter) extraction?
+  \item[\textbf{RQ3}] Does tool-based graph navigation yield higher accuracy
     than delivering the same graph as a text slice?
-  \item[\textbf{RQ3}] Which graph-navigation tools are necessary for accuracy?
-  \item[\textbf{RQ4}] How often do graph-navigating LLMs cite call edges that
-    the graph does not contain?
+  \item[\textbf{RQ4}] Which graph-navigation tools are necessary for accuracy?
+  \item[\textbf{RQ5}] How often do graph-navigating LLMs cite call edges not
+    supported by the underlying graph?
 \end{description}
 
 \paragraph{Main findings.}
 \begin{enumerate}
-  \item Graph context provides only marginal accuracy gains: neither model
-    exceeds one correct answer out of five (Qwen, excluding Q2) or six across any single condition.
-    Furthermore, 15 of 48 answer slots (31\,\%) arise from function-pointer gaps that make
-    the target structurally unreachable in both graphs.
-  \item Text slices match or exceed the tool condition in exact accuracy at
+  \item Graph context provides only marginal accuracy gains in the 15-turn baseline: neither model
+    exceeds one correct answer out of five (excluding Q2) or six (Nemotron).
+    Furthermore, 15 of 48 answer slots (31\,\%) represent callback gaps where
+    targets are unreachable along static call edges.
+  \item Neither graph representation demonstrated superiority: \textsc{CT} and \textsc{SYN}
+    achieved identical exact accuracy across both models in the baseline (1 of 5 exact excluding Q2).
+  \item Text slices match or exceed 15-turn tool conditions in exact accuracy at
     about ten to twelve times lower token cost for \qwen and sixteen to twenty-three
-    times lower for \nemotron, though the exact pattern is model-dependent:
-    \nemotron solved Q5 in both tool conditions while \qwen succeeded only in the text conditions.
-  \item Source-only retrieval (no edge-traversal tools) consumes sixty times more tokens
-    than a text slice with no accuracy gain; caller/callee tools were associated with
+    times lower for \nemotron. In top-3 accuracy, tool conditions are equal to or higher
+    than text slices in three of four comparisons.
+  \item Source-only retrieval (no edge-traversal tools) consumes 40--61$\times$ more tokens
+    than text slices with no accuracy gain; caller/callee tools were associated with
     a 2.4-fold lower rate of edges not supported by the graph (12\,\% vs.\ 28\,\%).
 \end{enumerate}
 

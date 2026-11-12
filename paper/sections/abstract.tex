@@ -8,12 +8,13 @@ questions on two large language models (\qwen and \nemotron).
 We compare a tool-using agent that navigates the graph via function calling,
 a text-slice condition that injects a BFS subgraph into the user message, and a
 no-context baseline, together with four tool-ablation variants.
-Graph context rarely improves exact accuracy under the 15-turn baseline: 15 of 48 answer
-slots (31\,\%) belong to two questions where the target function is separated by a function
-pointer; a pure graph traversal alone cannot reach them, though an agent with source-reading
-and search tools can sometimes bridge the gap under an extended turn budget.
-Of the remaining 43 wrong answers in the baseline, 58\,\% name a different graph-reachable function.
-Text slices match the 15-turn tool condition at about ten to twelve times lower token
-cost for \qwen and sixteen to twenty-three times lower for \nemotron.
-In sensitivity probes, doubling the turn cap to 30 enables \textsc{CT-TOOL} to locate both
-callback-separated targets on \qwen (reaching 2 of 5 exact answers), though at steep token cost.
+Graph context rarely improves exact accuracy under the 15-turn baseline: of the
+43 wrong answers across all eight graph conditions, 15 (35\,\%) stem from function-pointer
+callback gaps that make the target unreachable along static call edges, and 25 (58\,\%)
+name a different graph node.
+Text slices match the 15-turn tool condition in exact accuracy (and are within one question in
+top-3 coverage) at about ten to twelve times lower token cost for \qwen and sixteen to
+twenty-three times lower for \nemotron.
+Neither graph representation (compile-time vs.\ syntactic) demonstrated superior accuracy.
+In sensitivity probes, extending the turn budget to 30 enables agents equipped with source
+inspection to locate callback-separated targets on both graphs, though at steep token expense.

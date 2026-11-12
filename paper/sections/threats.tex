@@ -2,17 +2,19 @@
 \label{sec:threats}
 
 \paragraph{Internal validity.}
-\emph{Q2 contamination flag.}
-Q2's ground truth (\texttt{sqlite3Select}) was correct in all three \qwen{}
-\textsc{NOCTX} repetitions, suggesting possible memorisation.
-We flag and exclude Q2 from \qwen{} counts in the primary analysis, while also
-reporting $n{=}6$ counts for transparency; Nemotron's Q2 results are retained.
+\emph{Q2 benchmark artefact.}
+For Q2, the ground-truth function (\texttt{sqlite3Select}) is identical to the entry function
+specified in the problem prompt; answering the entry function is therefore correct by construction.
+On \qwen, the model answered \texttt{sqlite3Select} across 5 of 6 questions in \textsc{NOCTX},
+producing a 3 of 3 exact score on Q2.
+To prevent this benchmark artefact from skewing conclusions, we exclude Q2 from the primary
+comparisons across both models ($n{=}5$) and report the full benchmark ($n{=}6$) separately.
 \emph{Forced final answers and turn horizon.}
 All 48 baseline tool-condition runs (36 from \qwen{}, comprising 12 full-tool and 24 ablation runs,
 and 12 from \nemotron{}) hit the 15-turn cap; every baseline tool answer is
 therefore a forced final answer rather than a model-initiated termination.
-Our 30-turn probe (Section~\ref{sec:turn_horizon}) confirms that turn truncation was a
-limiting factor: extending the budget enabled \textsc{CT-TOOL} to solve two questions
+Our sensitivity probes (Section~\ref{sec:turn_horizon}) confirm that turn truncation was a
+limiting factor: extending the budget enabled both tool conditions to solve additional targets
 (including Q4, previously unsolved) and prompted earlier autonomous terminations.
 \emph{Tool delivery and source granularity confounds.}
 The comparison between TOOL and TEXT conditions carries a delivery confound:
@@ -22,11 +24,20 @@ Furthermore, \texttt{get\_function\_source} paginates at approximately 100 lines
 for large functions such as \texttt{sqlite3Select} ($>$1{,}500 lines), reading the complete body
 consumes multiple turns, potentially biasing the agent toward superficial inspection of monolithic functions.
 A $(+\text{src})$ text variant injecting full function source was not evaluated.
+\emph{Unevaluated graph features.}
+None of the six benchmark questions specifically concerns a taint vulnerability or struct field hierarchy bug.
+Consequently, the \texttt{get\_type\_hierarchy} and \texttt{get\_taint\_paths} tools, along with the
+84 compile-time \texttt{taint\_reaches} edges, were never queried by the benchmark questions.
 \emph{Nemotron ablation exclusion.}
 When evaluating \nemotron{} on tool-ablation subsets, the NVIDIA API repeatedly returned
 empty responses, short non-JSON strings, or malformed outputs across queries.
 Because stable ablation runs could not be completed under this API setup, ablation results
 are reported for \qwen{} only.
+\emph{Quantization and output truncation.}
+\qwen was served locally via LM Studio, whereas \nemotron was accessed via hosted inference.
+Under \nemotron \textsc{SYN-TEXT} on Q1, the response exceeded the 3{,}000 completion-token limit
+and truncated mid-stream, producing an invalid JSON parse (accounting for the 5 of 6 valid JSON count
+in Table~\ref{tab:cost}).
 \emph{Ground truth confirmation.}
 Q3 and Q4 ground truths were confirmed with a project partner on November 11;
 there is no independent external validation beyond the course benchmark.

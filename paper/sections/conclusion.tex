@@ -2,22 +2,23 @@
 \label{sec:conclusion}
 
 We presented a controlled empirical study of call-graph-guided LLM fault
-localisation on the \sqlite~3.30.1 codebase.
-Across nine conditions and two models, graph context provided only marginal
-exact-accuracy gains over the no-context baseline.
-The primary ceiling is structural: 15 of 48 answer slots (31\,\%) represent
-callback gaps where the target is unreachable in both graphs, and
-excluding these questions does not resolve failures on the remaining benchmarks.
-Where the target is reachable, the dominant failure mode is naming another
-graph-reachable function (58\,\% of wrong answers on \qwen), indicating that
-topological reachability alone is insufficient without stronger semantic disambiguation.
-Text slices match the tool condition at 10--12$\times$ lower token cost on \qwen
-and 16--23$\times$ lower on \nemotron, making them a practical baseline for
-shallow-target queries.
+localisation on the \sqlite~3.30.1 codebase across nine conditions and two models.
+In the 15-turn baseline, graph context provided only marginal exact-accuracy gains:
+neither model exceeded one correct answer out of five (excluding Q2) or six (Nemotron).
+Of the 43 wrong answers across all eight graph conditions, 15 (35\,\%) stem from
+function-pointer callback gaps that make targets unreachable along static call edges,
+and 25 (58\,\%) name a different graph node.
+Neither graph representation (compile-time \clang vs.\ syntactic tree-sitter) demonstrated
+superior accuracy.
+Text slices match tool conditions in exact accuracy (and remain within one question in top-3
+coverage) at 10--12$\times$ lower token cost on \qwen and 16--23$\times$ lower on \nemotron.
 Furthermore, caller/callee tools were associated with a 2.4$\times$ lower rate of
 edges not supported by the graph compared to source-only navigation (12\,\% vs.\ 28\,\%),
 suggesting that edge-traversal tools ground the agent's cited reasoning paths even
 when they do not alter the final answer.
+In sensitivity probes, extending the turn horizon to 30 enabled agents equipped with
+source reading to locate callback-separated targets on both graphs, though at substantial
+token expense.
 
 Future work should address three promising directions: (i)~incorporating function-pointer
 recovery and dynamic dispatch recording to raise the structural reachability ceiling,

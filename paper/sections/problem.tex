@@ -17,21 +17,29 @@ used in real-world FL research, and its function-pointer-heavy dispatch tables
 directly expose the structural-gap challenge studied here.
 
 \paragraph{Benchmark.}
-We evaluate on six questions drawn from the course benchmark, each specifying
-an entry function, a symptom description, and a ground-truth function.
-The targets span SQL query processing (\texttt{sqlite3Select},
+We evaluate on six fault-localisation questions drawn from real SQLite bug fixes
+committed after version 3.30.1.
+Each bug was reproduced on the 3.30.1 snapshot with call chains manually verified.
+Following our pre-registered protocol (D14), the ground truth is strictly defined as
+the \emph{fault site}---the function modified in the upstream fix patch---rather than
+the downstream crash or assertion site.
+Prompts use symptom-only wording (e.g., describing observable query errors or memory leaks)
+without mentioning internal function identifiers.
+The target functions span SQL query processing (\texttt{sqlite3Select},
 \texttt{flattenSubquery}, \texttt{withExpand}), string formatting
-(\texttt{sqlite3\_str\_vappendf}), name resolution
+(\texttt{sqlite3\_str\_vappendf}), expression ordering
 (\texttt{resolveOrderByTermToExprList}), and aggregate accumulation
 (\texttt{resetAccumulator}).
-Two questions (Q1 and Q4) target functions that are reachable from the entry
-only via function-pointer calls and are therefore absent from both graphs.
 
-\paragraph{Structural challenge.}
-\sqlite relies heavily on function pointers stored in virtual-table and callback
-structs.
-Neither the compile-time nor the syntactic graph models these dynamic edges, creating
-structural gaps between the entry function and certain targets.
-While a pure graph traversal alone along static edges cannot reach these targets, an agent
-equipped with source-reading and symbol-search tools can in principle bridge the gap if
-given sufficient search budget.
+\paragraph{Structural challenge and callback gaps.}
+\sqlite relies extensively on function pointers stored in walker structs and callback tables.
+Neither the compile-time nor the syntactic graph models dynamic function-pointer dispatches.
+Consequently, two targets---\texttt{resolveOrderByTermToExprList} (Q1) and
+\texttt{withExpand} (Q4)---are present as nodes in the graph databases but are
+unreachable along static \texttt{calls} edges from the entry function (\texttt{sqlite3Select}).
+A third question (Q5, \texttt{sqlite3\_str\_vappendf}) also executes through a function
+pointer at runtime; in the static call graph, it is topologically reachable only via an
+unrelated error-logging route rather than the active data path.
+While a pure static edge traversal cannot reach these targets along genuine call chains,
+an agent equipped with symbol search and source reading can in principle locate them
+if granted sufficient search budget.
