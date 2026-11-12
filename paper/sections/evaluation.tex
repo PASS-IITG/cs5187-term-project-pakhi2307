@@ -216,6 +216,17 @@ The results confirm systematic improvements across both graph back-ends:
     on Q2 and 67\,\% top-3 coverage on Q1 and Q5.
 \end{itemize}
 
+\paragraph{Goal-wording control experiment.}
+To verify whether performance gains in the 30-turn probe were driven by prompt phrasing
+rather than active tool navigation, we evaluated a control condition applying the updated
+goal wording to \textsc{NOCTX}, \textsc{SYN-TEXT}, and \textsc{CT-TEXT} on \qwen (30 runs).
+The goal wording alone failed to solve Q1 or Q4 in any condition: both text slices scored
+0 of 1 on Q1 and Q4, and \textsc{NOCTX} defaulted to answering \texttt{sqlite3Select} on 5 of 6
+questions.
+This confirms that discovering \texttt{resolveOrderByTermToExprList} (Q1) and \texttt{withExpand}
+(Q4) in the extended tool runs was uniquely enabled by interactive tool traversal and source reading,
+not merely by goal instruction wording.
+
 \paragraph{Methodological takeaways.}
 Tuning guidance prompts on the evaluation benchmark carries an inherent risk of
 optimistic bias, and the additional navigation depth incurs substantial token cost
