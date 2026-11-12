@@ -54,7 +54,8 @@ fault-localisation benchmark questions.
     Furthermore, 15 of 48 answer slots (31\,\%) represent callback gaps where
     targets are unreachable along static call edges.
   \item Neither graph representation demonstrated superiority: \textsc{CT} and \textsc{SYN}
-    achieved identical exact accuracy across both models in the baseline (1 of 5 exact excluding Q2).
+    achieved identical exact accuracy in the \textsc{TEXT} conditions and differed by one question
+    in the \textsc{TOOL} conditions (\qwen: SYN 1, CT 0; \nemotron: 1 each).
   \item Text slices match or exceed 15-turn tool conditions in exact accuracy at
     about ten to twelve times lower token cost for \qwen and sixteen to twenty-three
     times lower for \nemotron. In top-3 accuracy, tool conditions are equal to or higher

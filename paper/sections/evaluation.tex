@@ -37,7 +37,7 @@ Q2 included ($n{=}6$) across both models for transparency.
                    & \textbf{Ex.} & \textbf{T3}
                    & \textbf{Ex.} & \textbf{T3} \\
 \midrule
-\textsc{NOCTX}            & 0 & 0 & 1 & 1 & 1 & 2 & 1 & 2 \\
+\textsc{NOCTX}            & 0 & 0 & 1 & 1 & 1 & 1 & 1 & 2 \\
 \textsc{SYN-TOOL}          & 1 & 2 & 1 & 3 & 1 & 4 & 1 & 4 \\
 \textsc{CT-TOOL}           & 0 & 1 & 0 & 2 & 1 & 2 & 1 & 3 \\
 \textsc{SYN-TEXT}          & 1 & 1 & 1 & 1 & 1 & 2 & 1 & 3 \\
@@ -104,6 +104,9 @@ fully consuming the turn budget.
 \textsc{CT-ct\_types}      &  60,796 & 702 & 17 & --- & --- & --- \\
 \textsc{CT-src-only}        & 208,833 & 759 & 49 & --- & --- & --- \\
 \textsc{SYN-src-only}       & 210,621 & 804 & 55 & --- & --- & --- \\
+\midrule
+\textsc{SYN-TOOL (30-turn)} & 286,523 & 1,446 & 58 & --- & --- & --- \\
+\textsc{CT-TOOL (30-turn)}  & 270,512 & 1,213 & 51 & --- & --- & --- \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -170,7 +173,7 @@ have direction reversed.
 The rate of edges not supported by the graph was 2.4$\times$ lower in conditions with
 caller/callee tools (12\,\%, 10 of 86 edges) than in source-only conditions (28\,\%, 13 of 47
 edges).
-Evidence-path pairs show an identical trend (13\,\% vs.\ 34\,\%).
+Evidence-path pairs show an identical trend (14\,\% vs.\ 35\,\%).
 This descriptive association indicates that edge-traversal tools ground the agent's cited
 reasoning paths to verifiable edges, whereas source-only agents frequently cite edges
 not supported by the underlying call graph.
@@ -185,20 +188,22 @@ In the baseline protocol, all 48 tool runs hit the 15-turn cap and required a
 forced final answer.
 To understand the underlying causes, we conducted an exploratory sensitivity
 analysis examining turn awareness, stopping cues, and search horizon on \qwen.
-Per our pre-registered decision log (D17), all modifications are evaluated on a
-separate run track and reported side-by-side; they do not replace the headline
-baseline figures.
+Per decision-log entry D17 (written after the baseline results were known), all modifications
+are evaluated on a separate run track and reported side by side.
+Because the prompt, turn cap, and temperature changed together, the performance changes below
+cannot be attributed to any single factor in isolation.
 
 \paragraph{Turn awareness and early stopping (15 turns).}
 We updated the tool prompt to provide a per-turn countdown (\emph{``Tool calls left:~$N$''})
 and a convergence nudge at two-thirds budget (\emph{``Start converging. If you have a candidate, answer now''}).
 Under this 15-turn configuration, 4 of 12 runs concluded with \texttt{stop=final} on their
 own without invoking the forced final prompt.
+These 12 runs scored 0 exact (0 excluding Q2).
 
 \paragraph{Extended search horizon with 3 repetitions (30 turns, $T=0.7$).}
 To evaluate whether performance gains were stable or stochastic, we ran 3 sampled repetitions
 per question at temperature~0.7 with a 30-turn cap and the refined guidance prompt (36 runs total).
-The results confirm systematic improvements across both graph back-ends:
+The results show marked differences from the baseline:
 \begin{itemize}
   \item \textbf{Autonomous termination}: Rather than hitting the turn cap indiscriminately,
     \textbf{26 of 36 runs (72\,\%)} terminated autonomously with \texttt{stop=final},
@@ -211,7 +216,7 @@ The results confirm systematic improvements across both graph back-ends:
   \item \textbf{Overall accuracy}: Excluding flagged Q2, both graphs achieved an identical
     per-run exact accuracy of 20\,\% (3 of 15 runs correct on \textsc{SYN-TOOL}: Q4 in 1 of 3, Q5 in 2 of 3;
     3 of 15 runs correct on \textsc{CT-TOOL}: Q1 in 2 of 3, Q4 in 1 of 3). Across the full 6 questions,
-    top-3 coverage reached 100\,\% on Q2 across both graphs, and 67\,\% on Q1 (\textsc{CT-TOOL}) and Q5 (\textsc{SYN-TOOL}).
+    top-3 coverage reached 100\,\% on Q2 (both graphs) and Q5 (\textsc{SYN-TOOL}), and 67\,\% on Q1 and Q5 (\textsc{CT-TOOL}).
 \end{itemize}
 
 \paragraph{Goal-wording control experiment.}
@@ -228,10 +233,11 @@ rather than prompt phrasing alone.
 \paragraph{Methodological takeaways.}
 Tuning guidance prompts on the evaluation benchmark carries an inherent risk of
 optimistic bias, and the additional navigation depth incurs substantial token cost
-(averaging 250{,}000--400{,}000 prompt tokens per query).
+(averaging 270{,}512 prompt tokens on CT and 286{,}523 on SYN).
 Furthermore, on a six-question benchmark, the 3 of 15 per-run accuracy on both graphs represents
 a modest absolute count that warrants cautious interpretation.
-Nonetheless, the sensitivity experiments suggest that: (i)~the 15-turn cap was prematurely truncating
-search depth on multi-hop and callback-separated functions, (ii)~turn countdown visibility effectively
-curtails unbounded exploration, and (iii)~static function-pointer gaps do not represent an insurmountable
-ceiling when agents can inspect source and search symbol definitions.
+Nonetheless, the sensitivity experiments suggest that: (i)~a longer turn budget together with the
+revised prompt allowed some callback-separated targets to be reached (the effect of the cap alone
+was not isolated), (ii)~turn countdown visibility effectively curtails unbounded exploration, and
+(iii)~static function-pointer gaps do not represent an insurmountable ceiling when agents can
+inspect source and search symbol definitions.

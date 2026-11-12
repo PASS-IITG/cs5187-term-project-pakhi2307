@@ -16,9 +16,9 @@ substantial token expense.
 \paragraph{Compile-time vs.\ syntactic call graphs.}
 A central empirical question is whether compiler-grade extraction (\clang) outperforms
 lightweight syntactic extraction (tree-sitter).
-Our results show no measurable difference in fault-localisation accuracy: both \textsc{CT}
-and \textsc{SYN} conditions achieved identical exact accuracy across both models
-(1 of 5 exact excluding Q2 on Qwen; 1 of 6 on Nemotron).
+Our results show no measurable difference in fault-localisation accuracy: \textsc{CT} and
+\textsc{SYN} achieved identical exact accuracy in the \textsc{TEXT} conditions and differed by
+only one question in the \textsc{TOOL} conditions (\qwen: SYN 1, CT 0; \nemotron: 1 each).
 While \clang extracted 2{,}438 call-site edges with argument bindings compared to 772 unique
 call pairs in \texttt{graphify}, the additional compiler precision did not translate into
 higher localisation accuracy on this benchmark.

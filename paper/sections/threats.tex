@@ -2,13 +2,18 @@
 \label{sec:threats}
 
 \paragraph{Internal validity.}
-\emph{Q2 benchmark artefact.}
+\emph{Q2 benchmark artefact and contamination control.}
 For Q2, the ground-truth function (\texttt{sqlite3Select}) is identical to the entry function
 specified in the problem prompt; answering the entry function is therefore correct by construction.
-On \qwen, the model answered \texttt{sqlite3Select} across 5 of 6 questions in \textsc{NOCTX},
-producing a 3 of 3 exact score on Q2.
+In the baseline \textsc{NOCTX} condition, \qwen answered \texttt{sqlite3Select} in all 3 repeats,
+and in the goal-wording control run it defaulted to \texttt{sqlite3Select} across 5 of 6 questions.
 To prevent this benchmark artefact from skewing conclusions, we exclude Q2 from the primary
 comparisons across both models ($n{=}5$) and report the full benchmark ($n{=}6$) separately.
+\emph{Training-data contamination.}
+The six bugs are public and the training cutoffs of both models are unknown, so some answers
+may reflect memorisation. The no-context runs are a partial control only: excluding Q2, Qwen got
+0 of 15 exact and Nemotron 1 of 15, but Nemotron placed the ground truth in its top three for Q1
+and Q2 in all three repeats, which may reflect prior knowledge or cues in the question text.
 \emph{Forced final answers and turn horizon.}
 All 48 baseline tool-condition runs (36 from \qwen{}, comprising 12 full-tool and 24 ablation runs,
 and 12 from \nemotron{}) hit the 15-turn cap; every baseline tool answer is
@@ -33,14 +38,20 @@ When evaluating \nemotron{} on tool-ablation subsets, the NVIDIA API repeatedly 
 empty responses, short non-JSON strings, or malformed outputs across queries.
 Because stable ablation runs could not be completed under this API setup, ablation results
 are reported for \qwen{} only.
-\emph{Quantization and output truncation.}
-\qwen was served locally via LM Studio, whereas \nemotron was accessed via hosted inference.
+\emph{Hosting differences and output truncation.}
+\qwen was served locally via LM Studio (the local model's quantisation level was not recorded), whereas \nemotron was accessed via hosted inference; quantization artefacts may affect reasoning precision.
 Under \nemotron \textsc{SYN-TEXT} on Q1, the response exceeded the 3{,}000 completion-token limit
 and truncated mid-stream, producing an invalid JSON parse (accounting for the 5 of 6 valid JSON count
 in Table~\ref{tab:cost}).
-\emph{Ground truth confirmation.}
-Q3 and Q4 ground truths were confirmed with a project partner on November 11;
-there is no independent external validation beyond the course benchmark.
+\emph{Condition comparability.}
+The TEXT conditions are not token-matched: SYN slices are smaller than CT slices (2{,}849 vs.\ 4{,}405 tokens for \texttt{sqlite3Select}).
+In addition, \textsc{SYN-TOOL} had 5 tools and \textsc{CT-TOOL} 7; 310 of the SYN graph's 772 call edges were inferred by heuristic.
+\emph{Sample size and variance.}
+With six questions and one run per baseline condition at temperature~0, no variance estimate is available, and a one-question difference is not evidence of a systematic effect.
+\emph{Ground truth determination and fix-build verification.}
+For Q3 and Q4 the bug was reproduced on the vulnerable build, but the fix-build differential
+was not run; the ground truth follows the fault-site rule (D14) and was agreed by both authors.
+For Q4 the upstream fix also modifies \texttt{sqlite3ErrorMsg}, which is outside the analysed files.
 
 \paragraph{External validity.}
 Our study covers one codebase (\sqlite~3.30.1), six benchmark questions, and
