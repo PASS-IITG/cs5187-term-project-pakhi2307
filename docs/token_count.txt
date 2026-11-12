@@ -1,0 +1,19 @@
+tokenizer: tiktoken cl100k_base
+root: sqlite-src
+
+file            ring       lines    tokens
+src/tokenize.c  core         864     10686
+parse.c         core        5514     85304
+src/vdbe.c      core        7822     82824
+src/vdbeapi.c   core        2052     18784
+src/vdbemem.c   core        1889     18773
+src/prepare.c   ring-1       937      9348
+src/select.c    ring-1      6716     71735
+src/resolve.c   ring-1      1825     18490
+src/walker.c    ring-1       208      2000
+src/func.c      ring-1      2026     18891
+src/printf.c    ring-1      1297     12017
+
+core files only:               216371
+original six files:            225719   (compare with the earlier 84,438)
+all 11 files in the graph:       348852

@@ -1,44 +1,73 @@
 \section{Introduction}
 \label{sec:intro}
-%% Paragraph plan (each paragraph = one job; keep to this order):
-%%  P1  Concrete scenario the reader knows: "Suppose you want to ...".
-%%      State what existing tools need or do, with citations.
-%%  P2  The first/known problem and who already works on it (cite).
-%%      End with where they stop: "These tools stop when ...".
-%%  P3  OUR problem, in plain words: "We focus on a second problem that
-%%      starts where they stop: ...". Why it is silent/dangerous.
-%%  P4  A real example with exact numbers, pointing to a figure
-%%      (Figure~\ref{fig:motivating}). Then "This is not a single case." + count.
-%%  P5  Prior work on the closest idea and its precise gap
-%%      ("However, they need ...", "Their method depends on ...").
-%%  P6  "We bring/We present \tool ..." + numbered steps (enumerate), each
-%%      step one sentence, each pointing to its section. Then list outputs.
-%%  P7  First results with numbers, and one lesson learned.
-%%  Contributions (itemize), each item ending in (Section~\ref{...}).
 
-\todo{P1: scenario.}
+Identifying which function is responsible for a reported bug---fault
+localisation---is one of the most time-consuming steps in software
+maintenance~\cite{wong16survey}.
+Traditional automated approaches such as spectrum-based FL (SBFL) rank
+functions by test-coverage patterns~\cite{jones05tarantula}, requiring both a
+test suite and the ability to execute the program.
+Large language models (LLMs) offer a complementary capability: they can reason
+over natural-language bug descriptions and source code simultaneously, and can
+be equipped with \emph{tools} that retrieve task-relevant information
+on-the-fly~\cite{yao23react}.
+However, LLMs cannot read an entire production codebase within their context
+window, so retrieval quality is a key bottleneck.
 
-\focus{\textbf{Motivating example.} Give one \emph{real} case (a bug report,
-  a CVE, a failing test, a slow build, a measured number) that shows the
-  problem is real and worth solving. Point to Figure~\ref{fig:motivating},
-  use exact numbers, then add one sentence proving it is not a one-off
-  (``This is not a single case.'' + a count). This is graded: no toy or
-  imaginary example.}
+A code call-graph provides a structured, navigable index of which functions
+call which others.
+Given a call-graph, a tool-using agent can iteratively narrow the search---
+following callers upward, callees downward, and taint paths through the
+data-flow---without loading the full source.
+Alternatively, a breadth-first slice of the same graph can be serialised as
+plain text and injected into the prompt, trading repeated tool-call overhead
+for a single, larger context window.
+Both strategies have been proposed in recent work, but a direct controlled
+comparison on a real, well-known codebase under identical conditions is lacking.
+
+We build two call-graphs for the \sqlite~3.30.1 source: a compile-time graph
+extracted with \clang~18.1.3 (417 functions, 2{,}438 call edges, 84 taint
+edges) and a syntactic graph extracted with tree-sitter/graphify.
+We then run a controlled experiment across five conditions (no-context,
+tool-agent on each graph, text-slice on each graph) and four tool-ablation
+variants, using two instruction-tuned LLMs (\qwen and \nemotron) on six
+fault-localisation benchmark questions.
+
+\paragraph{Research questions.}
+\begin{description}
+  \item[\textbf{RQ1}] Does call-graph context (tool or text) improve
+    fault-localisation accuracy over a no-context baseline?
+  \item[\textbf{RQ2}] Does tool-based graph navigation yield higher accuracy
+    than delivering the same graph as a text slice?
+  \item[\textbf{RQ3}] Which graph-navigation tools are necessary for accuracy?
+  \item[\textbf{RQ4}] How often do graph-navigating LLMs cite call edges that
+    the graph does not contain?
+\end{description}
+
+\paragraph{Main findings.}
+\begin{enumerate}
+  \item Graph context provides only marginal accuracy gains: neither model
+    exceeds one correct answer out of five (Qwen, excluding Q2) or six across any single condition.
+    Furthermore, 15 of 48 answer slots (31\,\%) arise from function-pointer gaps that make
+    the target structurally unreachable in both graphs.
+  \item Text slices match or exceed the tool condition in exact accuracy at
+    about ten to twelve times lower token cost for \qwen and sixteen to twenty-three
+    times lower for \nemotron, though the exact pattern is model-dependent:
+    \nemotron solved Q5 in both tool conditions while \qwen succeeded only in the text conditions.
+  \item Source-only retrieval (no edge-traversal tools) consumes sixty times more tokens
+    than a text slice with no accuracy gain; caller/callee tools were associated with
+    a 2.4-fold lower rate of edges not supported by the graph (12\,\% vs.\ 28\,\%).
+\end{enumerate}
 
 \paragraph{Contributions.}
-\begin{itemize}
-  \item We define \todo{concept} (Section~\ref{sec:problem}).
-  \item We present \tool, which \todo{what} (Section~\ref{sec:approach}).
-  \item We evaluate \tool on \todo{n} \todo{subjects} (Section~\ref{sec:eval}).
-  \item We release the tool and all data (Section~\ref{sec:data}).
-\end{itemize}
-
-\begin{figure}[t]
-\begin{lstlisting}[numbers=none,escapechar=@]
-// the real code / input that shows the problem, trimmed with ...
-\end{lstlisting}
-\caption{\textcolor{red}{[Motivating example --- graded]} A real case of the
-  problem. \todo{The caption states the lesson, with the exact number, so a
-  reader who reads only captions gets it.}}
-\label{fig:motivating}
-\end{figure}
+\begin{enumerate}
+  \item Two open call-graph databases for \sqlite~3.30.1 (compile-time and
+    syntactic), together with graph query tool suites (7 tools for CT, 5 for SYN),
+    a text-slice generator, and a resumable multi-condition evaluation harness.
+  \item An empirical study comparing tool-based and text-slice context delivery
+    across two LLMs and nine experimental conditions, with a detailed error
+    classification and path-correctness analysis.
+  \item An annotated dataset of 48 answer slots (including 43 failure slots) and 133
+    edge-verification records identifying when graph-conditioned LLMs cite edges
+    absent from the graph.
+\end{enumerate}

@@ -1,0 +1,23 @@
+venv/
+sqlite-src/
+__pycache__/
+*.db
+*.db
+venv/
+sqlite-src/
+__pycache__/
+.env
+# backups
+*.bak_*
+# local configs
+config_local_*.yaml
+# SQLite source tree
+sqlite-src/
+# logs and smoke runs
+logs/
+results/smoke*.jsonl
+results/*.bak_*
+# python
+__pycache__/
+*.pyc
+.env

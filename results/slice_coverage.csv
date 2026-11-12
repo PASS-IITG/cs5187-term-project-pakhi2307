@@ -1,0 +1,13 @@
+question,graph,entry,ground_truth,gt_in_slice,slice_chars,tokens,stopped_by
+Q001,SYN,sqlite3Select,resolveOrderByTermToExprList,False,9386,2849,exhausted
+Q001,CT,sqlite3Select,resolveOrderByTermToExprList,False,14164,4405,exhausted
+Q002,SYN,sqlite3Select,sqlite3Select,True,9386,2849,exhausted
+Q002,CT,sqlite3Select,sqlite3Select,True,14164,4405,exhausted
+Q003,SYN,sqlite3Select,flattenSubquery,True,9386,2849,exhausted
+Q003,CT,sqlite3Select,flattenSubquery,True,14164,4405,exhausted
+Q004,SYN,sqlite3Select,withExpand,False,9386,2849,exhausted
+Q004,CT,sqlite3Select,withExpand,False,14164,4405,exhausted
+Q005,SYN,sqlite3_step,sqlite3_str_vappendf,True,8864,2963,exhausted
+Q005,CT,sqlite3_step,sqlite3_str_vappendf,True,19473,5982,budget
+Q006,SYN,sqlite3Select,resetAccumulator,True,9386,2849,exhausted
+Q006,CT,sqlite3Select,resetAccumulator,True,14164,4405,exhausted

@@ -1,6 +1,50 @@
 \section{Discussion}
 \label{sec:discussion}
-%% Question-style paragraphs that answer what a reviewer will ask:
-%%   \paragraph{Is more X always better?} No. ...
-%% End limits with "We leave this for future work." -- do not hide them.
-\paragraph{\todo{Reviewer question}?} \todo{Short, honest answer.}
+
+\paragraph{Graph completeness and tool synergy.}
+The 31\,\% of baseline slots attributable to callback gaps illustrates the penalty
+imposed when static call graphs omit function-pointer dispatches.
+Under a standard 15-turn traversal, targets separated by callback boundaries remained
+unreached.
+However, our sensitivity analysis revealed that graph tools do not operate in a vacuum:
+given an expanded 30-turn budget, \textsc{CT-TOOL} combined graph exploration with symbol
+searches and source inspection to locate both Q1 and Q4.
+Thus, static graph gaps represent a formidable barrier for pure edge traversals,
+though hybrid agents equipped with source inspection can partially bridge them at
+substantial token expense.
+
+\paragraph{Text slices as a practical baseline.}
+Text slices match or exceed tool conditions in exact accuracy at a fraction of
+the token cost (3,500--5,500 tokens vs.\ 39,000--86,000 for tool conditions;
+10--12$\times$ for Qwen, 16--23$\times$ for Nemotron).
+For Q5 on \qwen, the BFS slice happens to include
+\texttt{sqlite3\_str\_vappendf} at shallow depth, while the tool agent
+stops at a callee one hop deeper (\texttt{printfTempBuf}).
+This suggests that for shallow-target questions where the answer lies within a
+small BFS radius of the entry, a text slice may be sufficient and is
+substantially cheaper.
+The model-dependence of the pattern (\nemotron{} solved Q5 in both tool
+conditions) cautions against generalising from a single model.
+
+\paragraph{Caller/callee tools and edge citation correctness.}
+The not-in-graph rate was 2.4$\times$ lower in conditions with caller/callee
+tools (12\,\%) than in source-only conditions (28\,\%).
+We report this as a descriptive difference on one model (133 edges across 36
+runs); no statistical test was applied.
+Some absent edges reflect function-pointer structural gaps rather than model
+fabrication, so the rate is an upper bound on actual hallucination.
+Even so, conditions with edge-traversal tools appear to constrain the model to
+citing edges that actually exist in the graph, even when those tools do not
+change the final answer.
+
+\paragraph{Majority voting and candidate comparison.}
+Taking a simple majority vote ($2/3$) across the three sensitivity repetitions
+definitively confirms two benchmark answers: Q1 on \textsc{CT-TOOL} (2 of 3 votes for
+\texttt{resolveOrderByTermToExprList}) and Q5 on \textsc{SYN-TOOL} (2 of 3 votes for
+\texttt{sqlite3\_str\_vappendf}).
+Sampling multiple trajectories with majority consensus effectively filters out
+transient misdirections (such as naming \texttt{walkWindowList} or \texttt{printfTempBuf}).
+Furthermore, qualitative inspection of failed trajectories suggests that prompting the
+agent to explicitly compare two or three candidate functions before committing---rather
+than selecting the first symptom-matching name such as \texttt{codeDistinct}---would
+further reduce false positives.

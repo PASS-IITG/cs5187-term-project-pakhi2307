@@ -1,0 +1,96 @@
+{
+  "root": "/home/student/cs5187-term-project-pakhi2307/sqlite-src",
+  "files": [
+    {
+      "file": "src/tokenize.c",
+      "status": "ok",
+      "errors": 0,
+      "first_errors": [],
+      "functions_in_tu": 18
+    },
+    {
+      "file": "parse.c",
+      "status": "ok",
+      "errors": 0,
+      "first_errors": [],
+      "functions_in_tu": 26
+    },
+    {
+      "file": "src/vdbe.c",
+      "status": "ok",
+      "errors": 0,
+      "first_errors": [],
+      "functions_in_tu": 17
+    },
+    {
+      "file": "src/vdbeapi.c",
+      "status": "ok",
+      "errors": 0,
+      "first_errors": [],
+      "functions_in_tu": 115
+    },
+    {
+      "file": "src/vdbemem.c",
+      "status": "ok",
+      "errors": 0,
+      "first_errors": [],
+      "functions_in_tu": 60
+    },
+    {
+      "file": "src/prepare.c",
+      "status": "ok",
+      "errors": 0,
+      "first_errors": [],
+      "functions_in_tu": 25
+    },
+    {
+      "file": "src/select.c",
+      "status": "ok",
+      "errors": 0,
+      "first_errors": [],
+      "functions_in_tu": 81
+    },
+    {
+      "file": "src/resolve.c",
+      "status": "ok",
+      "errors": 0,
+      "first_errors": [],
+      "functions_in_tu": 30
+    },
+    {
+      "file": "src/walker.c",
+      "status": "ok",
+      "errors": 0,
+      "first_errors": [],
+      "functions_in_tu": 13
+    },
+    {
+      "file": "src/func.c",
+      "status": "ok",
+      "errors": 0,
+      "first_errors": [],
+      "functions_in_tu": 62
+    },
+    {
+      "file": "src/printf.c",
+      "status": "ok",
+      "errors": 0,
+      "first_errors": [],
+      "functions_in_tu": 36
+    }
+  ],
+  "graph": {
+    "types": 94,
+    "fields": 954,
+    "functions_defined": 417,
+    "indirect_calls_unresolved": 40,
+    "call_sites": 2438,
+    "field_type_links": 201,
+    "boundary_functions": 392,
+    "nodes_total": 1857,
+    "edges_total": 3593
+  },
+  "files_ok": 11,
+  "files_total": 11,
+  "seconds": 6.3
+}

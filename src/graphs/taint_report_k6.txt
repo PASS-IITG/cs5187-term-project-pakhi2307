@@ -1,0 +1,28 @@
+{
+  "k": 6,
+  "taint_edges": 84,
+  "by_sink_class": {
+    "free": 60,
+    "alloc": 14,
+    "copy": 10
+  },
+  "sources_with_edges": 11,
+  "out": "src/graphs/graph_ct_v2.db"
+}
+
+--- 15 random edges: label each plausible / implausible BY HAND against the source ---
+sqlite3_prepare:zSql           sqlite3_prepare > sqlite3LockAndPrepare > sqlite3Prepare > sqlite3RunParser > sqlite3Parser > yy_reduce > sqlite3DbMallocZero   @parse.c:3886
+sqlite3_bind_text:zData        sqlite3_bind_text > bindText > sqlite3VdbeMemSetStr > sqlite3VdbeMemClearAndResize > sqlite3VdbeMemGrow > sqlite3DbMallocRaw   @src/vdbemem.c:245
+sqlite3_prepare16_v2:zSql      sqlite3_prepare16_v2 > sqlite3Prepare16 > sqlite3LockAndPrepare > sqlite3Prepare > sqlite3RunParser > sqlite3DbFreeNN   @src/tokenize.c:718
+sqlite3_prepare_v3:zSql        sqlite3_prepare_v3 > sqlite3LockAndPrepare > sqlite3Prepare > sqlite3RunParser > sqlite3DbFree   @src/tokenize.c:693
+sqlite3_prepare16_v3:zSql      sqlite3_prepare16_v3 > sqlite3Prepare16 > sqlite3LockAndPrepare > sqlite3Prepare > sqlite3ParserReset > sqlite3DbFree   @src/prepare.c:525
+sqlite3_prepare16:zSql         sqlite3_prepare16 > sqlite3Prepare16 > sqlite3DbFree   @src/prepare.c:883
+sqlite3_prepare16_v3:zSql      sqlite3_prepare16_v3 > sqlite3Prepare16 > sqlite3LockAndPrepare > sqlite3Prepare > sqlite3DbFree   @src/prepare.c:689
+sqlite3_prepare:zSql           sqlite3_prepare > sqlite3LockAndPrepare > sqlite3Prepare > sqlite3RunParser > sqlite3_free   @src/tokenize.c:699
+sqlite3_prepare_v3:zSql        sqlite3_prepare_v3 > sqlite3LockAndPrepare > sqlite3Prepare > sqlite3DbFree   @src/prepare.c:689
+sqlite3_prepare_v2:zSql        sqlite3_prepare_v2 > sqlite3LockAndPrepare > sqlite3Prepare > sqlite3RunParser > sqlite3Parser > yy_reduce > sqlite3DbMallocZero   @parse.c:3886
+sqlite3_prepare_v3:zSql        sqlite3_prepare_v3 > sqlite3LockAndPrepare > sqlite3Prepare > sqlite3RunParser > sqlite3DbFreeNN   @src/tokenize.c:718
+sqlite3_bind_text16:zData      sqlite3_bind_text16 > bindText > sqlite3VdbeMemSetStr > sqlite3VdbeMemClearAndResize > sqlite3VdbeMemGrow > memcpy   @src/vdbemem.c:258
+sqlite3_bind_text:zData        sqlite3_bind_text > bindText > sqlite3VdbeMemSetStr > sqlite3VdbeMemClearAndResize > sqlite3VdbeMemGrow > sqlite3DbFreeNN   @src/vdbemem.c:244
+sqlite3_prepare:zSql           sqlite3_prepare > sqlite3LockAndPrepare > sqlite3Prepare > sqlite3DbFree   @src/prepare.c:621
+sqlite3_prepare16_v3:zSql      sqlite3_prepare16_v3 > sqlite3Prepare16 > sqlite3LockAndPrepare > sqlite3Prepare > sqlite3RunParser > sqlite3_free   @src/tokenize.c:699

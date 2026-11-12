@@ -1,16 +1,48 @@
 \section{Threats to Validity}
 \label{sec:threats}
-%% Internal / External / Construct. For each threat: what it is, what we did
-%% about it (itemize if several guards), what remains. Report non-determinism
-%% and LLM run-to-run variation with numbers.
-\focus{\textbf{Threats to validity.} Be honest about what could make your
-  conclusions wrong. Cover all three kinds below. For each: name the threat,
-  say what you did to reduce it (itemise the guards), and what still remains.
-  Report any non-determinism or run-to-run variation with numbers. Graded on
-  honesty, not on having zero threats.}
 
-\paragraph{Internal threats.} \todo{}
+\paragraph{Internal validity.}
+\emph{Q2 contamination flag.}
+Q2's ground truth (\texttt{sqlite3Select}) was correct in all three \qwen{}
+\textsc{NOCTX} repetitions, suggesting possible memorisation.
+We flag and exclude Q2 from \qwen{} counts in the primary analysis, while also
+reporting $n{=}6$ counts for transparency; Nemotron's Q2 results are retained.
+\emph{Forced final answers and turn horizon.}
+All 48 baseline tool-condition runs (36 from \qwen{}, comprising 12 full-tool and 24 ablation runs,
+and 12 from \nemotron{}) hit the 15-turn cap; every baseline tool answer is
+therefore a forced final answer rather than a model-initiated termination.
+Our 30-turn probe (Section~\ref{sec:turn_horizon}) confirms that turn truncation was a
+limiting factor: extending the budget enabled \textsc{CT-TOOL} to solve two questions
+(including Q4, previously unsolved) and prompted earlier autonomous terminations.
+\emph{Tool delivery and source granularity confounds.}
+The comparison between TOOL and TEXT conditions carries a delivery confound:
+tool-condition agents can read raw function bodies via \texttt{get\_function\_source},
+whereas text-condition models see only call relationships and signatures in the slice.
+Furthermore, \texttt{get\_function\_source} paginates at approximately 100 lines per call;
+for large functions such as \texttt{sqlite3Select} ($>$1{,}500 lines), reading the complete body
+consumes multiple turns, potentially biasing the agent toward superficial inspection of monolithic functions.
+A $(+\text{src})$ text variant injecting full function source was not evaluated.
+\emph{Nemotron ablation exclusion.}
+When evaluating \nemotron{} on tool-ablation subsets, the NVIDIA API repeatedly returned
+empty responses, short non-JSON strings, or malformed outputs across queries.
+Because stable ablation runs could not be completed under this API setup, ablation results
+are reported for \qwen{} only.
+\emph{Ground truth confirmation.}
+Q3 and Q4 ground truths were confirmed with a project partner on November 11;
+there is no independent external validation beyond the course benchmark.
 
-\paragraph{External threats.} \todo{Subjects, platform, versions.}
+\paragraph{External validity.}
+Our study covers one codebase (\sqlite~3.30.1), six benchmark questions, and
+two models.
+Results may not generalise to other programming languages, codebase scales, bug classes,
+or LLM architectures.
+\sqlite's function-pointer-heavy architecture means the callback-gap failure
+rate may be higher than in object-oriented or functional codebases.
 
-\paragraph{Construct threats.} \todo{Does the metric measure what we claim?}
+\paragraph{Construct validity.}
+The not-in-graph rate is an upper bound on model fabrication because
+function-pointer structural gaps also contribute absent edges.
+We use \emph{not supported by the graph} rather than \emph{hallucinated} to
+reflect this ambiguity.
+The 15-turn cap and forced-final mechanism may suppress answers the model would
+eventually reach with more turns.

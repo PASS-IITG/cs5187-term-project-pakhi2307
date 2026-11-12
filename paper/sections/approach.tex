@@ -1,28 +1,115 @@
 \section{Approach}
 \label{sec:approach}
-%% Start with the figure and the main idea in 2-3 sentences.
-%% One \subsection per step, titled "Step N: ..." matching the figure numbers.
-%% Say what is NOT new: "We do not claim this step as new. Everything after it is."
-%% Lists of actions use (i)~...; (ii)~...; inline.
 
-\focus{\textbf{Workflow.} Show how your method works end to end. Start with
-  the overview figure (Figure~\ref{fig:overview}) and state the main idea in
-  2--3 sentences: what goes in, what comes out, what loops, what is
-  expensive. Then one \texttt{\textbackslash subsection} per numbered box in
-  the figure --- the step numbers in the text must match the figure. Say
-  plainly which steps are yours and which you reuse (``We do not claim this
-  step as new'').}
+\subsection{Graph Construction}
 
-Figure~\ref{fig:overview} shows the steps of \tool. The main idea is
-\todo{one sentence}.
+\paragraph{Compile-time (CT) graph.}
+We parse eleven \sqlite{} C files with \clang~18.1.3 via libclang, recording
+every direct function call with its source location, argument identifiers, and
+return-value assignments.
+The resulting graph \textsc{CT-v1} contains 417 functions and 2{,}438 call
+edges stored in a SQLite database using a shared schema
+(\texttt{nodes} and \texttt{edges} tables).
+A lightweight taint pass propagates 15 user-controlled sources
+(\texttt{sqlite3\_prepare}, \texttt{sqlite3\_bind\_text}, etc.) to 24 sink
+categories (allocators, copiers, free functions) over depth-limited DFS,
+adding 84 \texttt{taint\_reaches} edges to produce \textsc{CT-v2}.
+Struct and union fields are stored separately as \texttt{has\_field\_of\_type}
+edges for type-hierarchy queries.
+The taint pass is a purely syntactic over-approximation: it does not model
+aliasing, pointer arithmetic, or global state.
 
-\begin{figure}[t]
-  \centering
-  \input{figures/overview}
-  \caption{Overview of \tool. \todo{What loops, what is expensive.}}
-  \label{fig:overview}
-\end{figure}
+\paragraph{Syntactic (SYN) graph.}
+We run the \texttt{graphify} tool (tree-sitter back-end) on the same eleven
+files and convert the resulting JSON to the shared schema via an adapter script.
+End-line values missing from the tree-sitter output are recovered via a
+brace-matching or next-definition heuristic.
+Because tree-sitter does not extract struct-field or taint information, the
+SYN graph does not support type-hierarchy or taint queries.
 
-\subsection{Step 1: \todo{Name}}
-\label{sec:step1}
-\todo{Text.}
+\subsection{Tool Set}
+
+The two graphs expose different tool subsets (Table~\ref{tab:tools}).
+The CT graph supports all seven tools; the SYN graph supports the five tools
+that require only call edges and function source, since it contains no
+type-hierarchy or taint edges.
+All tools return \texttt{\{"result":~\ldots,~"truncated":~bool\}} or
+\texttt{\{"error":~CODE,~\ldots\}} and are exposed to the LLM as OpenAI
+function-calling schemas.
+
+\begin{table}[h]
+\caption{Graph-navigation tools and their availability per graph.}
+\label{tab:tools}
+\small
+\begin{tabular}{lp{4.0cm}cc}
+\toprule
+\textbf{Tool} & \textbf{Description} & \textbf{CT} & \textbf{SYN} \\
+\midrule
+\texttt{get\_callers(fn)}           & Direct callers of a function        & \checkmark & \checkmark \\
+\texttt{get\_callees(fn)}           & Direct callees of a function        & \checkmark & \checkmark \\
+\texttt{find\_call\_path(src, dst)} & BFS shortest call chain             & \checkmark & \checkmark \\
+\texttt{get\_function\_source(fn)}  & Paginated source lines              & \checkmark & \checkmark \\
+\texttt{search\_functions(substr)}  & Fuzzy name search                   & \checkmark & \checkmark \\
+\texttt{get\_type\_hierarchy(type)} & Struct/union fields and types       & \checkmark & --- \\
+\texttt{get\_taint\_paths(param)}   & Sinks reachable from tainted param  & \checkmark & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Agent Loop (TOOL Conditions)}
+
+The agent runs up to 15 turns via the OpenAI-compatible function-calling
+interface at temperature~0.
+On each turn the model either calls a tool (observation appended to history) or
+emits a final JSON answer conforming to the \textsc{Answer} schema (required
+fields: \texttt{answer\_function}, \texttt{top3}, \texttt{evidence\_path},
+\texttt{taint\_path}, \texttt{cited\_edges}, \texttt{explanation}).
+If no final answer is produced within 15 turns, a force-prompt is appended
+and one additional call is made without tools (\texttt{stopped\_by =
+forced\_final}).
+All 48 tool-condition runs---36 from \qwen{} (12 non-ablation, 24 ablation)
+and 12 from \nemotron{}---hit the 15-turn cap; every reported tool-condition
+answer is therefore a forced final answer.
+
+\subsection{Text Slice (TEXT Conditions)}
+
+For the text conditions, a BFS from the entry function over \texttt{calls} edges
+serialises the call neighbourhood as plain text
+(\texttt{fn [file:line] calls: a, b, c}) within a token budget computed with
+the tiktoken \texttt{cl100k\_base} tokeniser.
+The slice is prepended to the user message, before the question.
+The model answers in one turn without tool access.
+
+\subsection{Evaluation Design}
+
+Table~\ref{tab:conditions} summarises the nine conditions.
+\textsc{NOCTX} provides neither code nor tools and is repeated three times
+per question at temperature~0.7 to estimate baseline variance.
+All other conditions use temperature~0 and run once per question.
+Ablation conditions (last four rows) were run on \qwen only: the NVIDIA API
+returned malformed or empty completions for \nemotron on every tool-subset
+call; this problem did not manifest in the full tool-set conditions.
+
+\begin{table}[h]
+\caption{Experimental conditions. ``5 tools'' denotes the SYN-compatible subset;
+  ``7 tools'' includes type-hierarchy and taint paths (CT only);
+  ``src+search'' denotes \texttt{get\_function\_source} and
+  \texttt{search\_functions}.}
+\label{tab:conditions}
+\small
+\begin{tabular}{lllp{3.5cm}}
+\toprule
+\textbf{Condition} & \textbf{Graph} & \textbf{Delivery} & \textbf{Tools} \\
+\midrule
+\textsc{NOCTX}           & ---      & None       & None \\
+\textsc{SYN-TOOL}         & SYN      & Tool calls & 5 tools \\
+\textsc{CT-TOOL}          & CT-v2    & Tool calls & 7 tools \\
+\textsc{SYN-TEXT}         & SYN      & Text slice & None \\
+\textsc{CT-TEXT}          & CT-v2    & Text slice & None \\
+\textsc{CT-ct\_calls}     & CT-v2    & Tool calls & 4 (callers, callees, source, search) \\
+\textsc{CT-ct\_types}     & CT-v2    & Tool calls & 5 (+ type hierarchy) \\
+\textsc{CT-src-only}      & CT-v2    & Tool calls & 2 (src+search) \\
+\textsc{SYN-src-only}     & SYN      & Tool calls & 2 (src+search) \\
+\bottomrule
+\end{tabular}
+\end{table}
