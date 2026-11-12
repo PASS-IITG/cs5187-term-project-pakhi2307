@@ -19,7 +19,9 @@ edges not supported by the graph compared to source-only navigation (12\,\% vs.\
 suggesting that edge-traversal tools ground the agent's cited reasoning paths even
 when they do not alter the final answer.
 
-Future work should investigate function-pointer recovery to raise the structural
-reachability ceiling, scale benchmark evaluation across diverse languages and codebases,
-and evaluate hybrid retrieval architectures combining prompt-injected slices with
-on-demand source verification.
+Future work should address three promising directions: (i)~incorporating function-pointer
+recovery and dynamic dispatch recording to raise the structural reachability ceiling,
+(ii)~supplementing graph tools with lexical code-search (e.g., regex/grep) to directly locate
+error messages and identifiers appearing in symptoms, and (iii)~designing adaptive source-paging
+mechanisms capable of summarizing monolithic functions like \texttt{sqlite3Select} ($>$1{,}500 lines)
+without consuming excessive agent turns.

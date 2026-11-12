@@ -36,3 +36,15 @@ fabrication, so the rate is an upper bound on actual hallucination.
 Even so, conditions with edge-traversal tools appear to constrain the model to
 citing edges that actually exist in the graph, even when those tools do not
 change the final answer.
+
+\paragraph{Majority voting and candidate comparison.}
+Taking a simple majority vote ($2/3$) across the three sensitivity repetitions
+definitively confirms two benchmark answers: Q1 on \textsc{CT-TOOL} (2 of 3 votes for
+\texttt{resolveOrderByTermToExprList}) and Q5 on \textsc{SYN-TOOL} (2 of 3 votes for
+\texttt{sqlite3\_str\_vappendf}).
+Sampling multiple trajectories with majority consensus effectively filters out
+transient misdirections (such as naming \texttt{walkWindowList} or \texttt{printfTempBuf}).
+Furthermore, qualitative inspection of failed trajectories suggests that prompting the
+agent to explicitly compare two or three candidate functions before committing---rather
+than selecting the first symptom-matching name such as \texttt{codeDistinct}---would
+further reduce false positives.

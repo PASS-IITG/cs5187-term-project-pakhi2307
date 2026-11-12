@@ -14,10 +14,13 @@ therefore a forced final answer rather than a model-initiated termination.
 Our 30-turn probe (Section~\ref{sec:turn_horizon}) confirms that turn truncation was a
 limiting factor: extending the budget enabled \textsc{CT-TOOL} to solve two questions
 (including Q4, previously unsolved) and prompted earlier autonomous terminations.
-\emph{Tool delivery confound.}
+\emph{Tool delivery and source granularity confounds.}
 The comparison between TOOL and TEXT conditions carries a delivery confound:
 tool-condition agents can read raw function bodies via \texttt{get\_function\_source},
 whereas text-condition models see only call relationships and signatures in the slice.
+Furthermore, \texttt{get\_function\_source} paginates at approximately 100 lines per call;
+for large functions such as \texttt{sqlite3Select} ($>$1{,}500 lines), reading the complete body
+consumes multiple turns, potentially biasing the agent toward superficial inspection of monolithic functions.
 A $(+\text{src})$ text variant injecting full function source was not evaluated.
 \emph{Nemotron ablation exclusion.}
 When evaluating \nemotron{} on tool-ablation subsets, the NVIDIA API repeatedly returned
