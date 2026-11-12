@@ -9,8 +9,14 @@ for l in open(runs, encoding="utf-8"):
     r = json.loads(l)
     o, _ = parse_final(r["final_text"])
     o = o if isinstance(o, dict) else {}
-    by[(r["question_id"], r["condition"])].append((o.get("answer_function"), o.get("top3") or []))
-conds = ["NOCTX", "SYN-TOOL", "CT-TOOL"]
+    cond = r.get("condition", "")
+    if cond:
+        by[(r["question_id"], cond)].append((o.get("answer_function"), o.get("top3") or []))
+seen_conds = []
+for l in open(runs, encoding="utf-8"):
+    c = json.loads(l).get("condition")
+    if c and c not in seen_conds: seen_conds.append(c)
+conds = seen_conds if seen_conds else ["NOCTX", "SYN-TOOL", "CT-TOOL"]
 print(f"{'Q':5}{'ground truth':26}" + "".join(f"{c:24}" for c in conds))
 tot = collections.Counter(); flagged = []
 for q in sorted(gt):
