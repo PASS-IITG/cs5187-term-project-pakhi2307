@@ -1,16 +1,42 @@
 \section{Related Work}
 \label{sec:related}
-%% One \paragraph{Topic.} per line of work, closest first ("Closest to us is
-%% the work of ..."). Summarise each work in one sentence with its citation.
-%% END EVERY PARAGRAPH with how we differ: "We share their goal, but ...",
-%% "These methods ..., but only for ... We aim at ...".
-%% Cite own prior work in the third person while anonymous.
-\focus{\textbf{Related work.} Group prior work by topic, closest to your
-  project first. One \texttt{\textbackslash paragraph\{Topic.\}} per line of
-  work, each summarised in one or two sentences with a \emph{verified}
-  citation. \textbf{End every paragraph with how you differ} (``We share
-  their goal, but \ldots''). Do not just list papers --- position yours
-  against them. Fabricated citations are not accepted.}
 
-\paragraph{\todo{Closest topic}.} Closest to us is \todo{}. We share their
-goal, but \todo{difference}.
+\paragraph{Spectrum-based fault localisation.}
+SBFL methods rank statements or functions by suspiciousness scores derived from
+pass/fail test-coverage data.
+Tarantula~\cite{jones05tarantula} introduced the coefficient refined by many
+later techniques.
+A comprehensive survey is given by \citet{wong16survey}.
+Our work differs fundamentally: we use neither test suites nor coverage data;
+the LLM reasons from a natural-language symptom description and optional
+call-graph context.
+
+\paragraph{Learning-based fault localisation.}
+Neural approaches learn suspiciousness from execution traces or static
+representations.
+Graph neural networks have been applied to program dependence graphs and
+call-graph slices to rank faulty methods, but these approaches are trained
+on labelled bug datasets.
+We instead provide the graph to an instruction-tuned LLM and study whether
+it can navigate the graph to identify faulty functions without task-specific
+training.
+
+\paragraph{LLMs for debugging and program repair.}
+LLMs have been applied to bug explanation, test generation, and automated
+repair~\cite{sobania23chatgpt}.
+Conversational repair systems prompt models iteratively with compiler feedback,
+achieving competitive patch rates.
+Agent-based approaches scale LLM-based FL to project-level context via
+retrieval-augmented generation.
+Our contribution relative to these is the controlled isolation of the effect of
+two specific graph-retrieval modalities (tool-based navigation vs.\ text slice)
+under identical conditions.
+
+\paragraph{LLM agents with structured retrieval.}
+The \textsc{ReAct} framework~\cite{yao23react} established the
+reason-act-observe pattern for tool-using agents.
+Recent systems apply this pattern to code navigation, browsing repository files
+iteratively.
+Our work extends this line by ablating the tool set, distinguishing
+caller/callee navigation, type queries, and taint paths from raw source access,
+and quantifying the effect on both accuracy and edge-citation correctness.

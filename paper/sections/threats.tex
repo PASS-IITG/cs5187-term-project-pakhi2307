@@ -1,16 +1,39 @@
 \section{Threats to Validity}
 \label{sec:threats}
-%% Internal / External / Construct. For each threat: what it is, what we did
-%% about it (itemize if several guards), what remains. Report non-determinism
-%% and LLM run-to-run variation with numbers.
-\focus{\textbf{Threats to validity.} Be honest about what could make your
-  conclusions wrong. Cover all three kinds below. For each: name the threat,
-  say what you did to reduce it (itemise the guards), and what still remains.
-  Report any non-determinism or run-to-run variation with numbers. Graded on
-  honesty, not on having zero threats.}
 
-\paragraph{Internal threats.} \todo{}
+\paragraph{Internal validity.}
+\emph{Q2 contamination flag.}
+Q2's ground truth (\texttt{sqlite3Select}) was correct in all three \qwen{}
+\textsc{NOCTX} repetitions, suggesting possible memorisation.
+We flag and exclude Q2 from \qwen{} counts; Nemotron's Q2 results are retained.
+\emph{Forced final answers.}
+All 36 tool-condition and 12 ablation-condition runs hit the 15-turn cap; every
+reported tool-condition answer is therefore a forced final answer
+rather than a model-initiated conclusion.
+Higher caps or different force-prompt designs might alter results.
+\emph{Nemotron ablation failure.}
+The NVIDIA API returned empty completions for every Nemotron ablation call after
+six retries; the full tool set did not exhibit this behaviour.
+Ablation results are \qwen-only and may not generalise to larger models.
+\emph{Ground truth confirmation.}
+Q3 and Q4 ground truths were confirmed with a project partner on November 11;
+there is no independent external validation beyond the course benchmark.
 
-\paragraph{External threats.} \todo{Subjects, platform, versions.}
+\paragraph{External validity.}
+Our study covers one codebase (\sqlite~3.30.1), six benchmark questions, and
+two models.
+Results may not generalise to other languages, codebase sizes, bug types, or
+LLM families.
+\sqlite's function-pointer-heavy architecture means the callback-gap failure
+rate may be higher than in object-oriented or functional codebases.
 
-\paragraph{Construct threats.} \todo{Does the metric measure what we claim?}
+\paragraph{Construct validity.}
+The not-in-graph rate is an upper bound on model fabrication because
+function-pointer structural gaps also contribute absent edges.
+We use \emph{not supported by the graph} rather than \emph{hallucinated} to
+reflect this ambiguity.
+The 15-turn cap and forced-final mechanism may suppress answers the model would
+eventually reach with more turns.
+The $(+\text{src})$ text variant---a text slice constructed from raw function
+source rather than the graph schema---was not implemented and remains
+future work.

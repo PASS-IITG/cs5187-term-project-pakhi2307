@@ -1,11 +1,17 @@
-%% ABSTRACT (150-250 words, one paragraph, no citations, no \ref).
-%% Pattern (from earlier papers):
-%%  1. The problem in 2-3 short sentences. Plain words; what tools do today.
-%%  2. Why it matters: ONE concrete, real case with an exact number
-%%     (e.g. a CVE, a miscompilation, a measured share).
-%%  3. "We present \tool." What it does, in steps, in one or two sentences.
-%%  4. Results with numbers: "On X, \tool ... from A\% to B\%."
-%%  5. One honest lesson or surprise the work taught ("The run also shows ...").
-%% No "novel", no "we propose a framework", no promises without numbers.
-\todo{Problem in two sentences.} \todo{One real case with a number.}
-We present \tool. \todo{What it does.} \todo{Results with numbers.}
+Call-graph-guided retrieval is a natural fit for LLM-based fault localisation:
+a structured graph constrains the search space and can either be navigated via
+tool calls or serialised as a text slice in the prompt.
+We evaluate whether two call-graph representations of \sqlite~3.30.1---a
+compile-time graph extracted with \clang~18.1.3 and a syntactic graph extracted
+with tree-sitter---improve LLM fault-localisation accuracy for six benchmark
+questions on two large language models (\qwen and \nemotron).
+We compare a tool-using agent that navigates the graph via function calling,
+a text-slice condition that injects a BFS subgraph into the prompt, and a
+no-context baseline, together with four tool-ablation variants.
+Graph context rarely improves exact accuracy: 31\,\% of Qwen failure slots stem
+from function-pointer gaps that make the target structurally unreachable in both
+graphs, while 52\,\% are misdirections even when the target is a graph node.
+Text slices match the tool condition at ten to fifteen times lower token cost.
+Source-only retrieval consumes four to five times more tokens than full graph
+navigation with no accuracy gain, suggesting that edge-traversal tools add
+navigational value beyond raw source access.

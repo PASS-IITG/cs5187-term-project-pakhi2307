@@ -1,8 +1,25 @@
 \section{Conclusion}
 \label{sec:conclusion}
-%% Two short paragraphs. (1) The problem again in 2-3 sentences with the key
-%% number. (2) "We presented \tool, which ..." + the main results with the
-%% same numbers as the abstract. No new claims, no new numbers, no hype.
-\todo{Problem and key number.}
 
-We presented \tool, which \todo{}.
+We presented a controlled empirical study of call-graph-guided LLM fault
+localisation on the \sqlite~3.30.1 codebase.
+Across nine conditions and two models, graph context provided only marginal
+exact-accuracy gains over the no-context baseline.
+The primary ceiling is structural: 31\,\% of \qwen{} failure slots arise from
+function-pointer gaps that make the target unreachable in both graphs, and
+removing these two structurally-blocked questions does not substantially change
+the picture for the remaining four.
+Where the target is reachable, the dominant failure mode is incorrect function
+identification (52\,\% of \qwen{} slots), suggesting that graph traversal alone
+is insufficient without better disambiguation among structurally adjacent
+functions.
+Text slices match the tool condition at ten to fifteen times lower token cost,
+making them a competitive practical choice for shallow-target questions.
+Caller/callee tools reduce unsupported edge citations by a factor of 2.4
+(28\,\% vs.\ 12\,\%) even when they do not change the final answer, indicating a
+navigational grounding effect that may matter more at scale.
+
+Future work should address function-pointer recovery to raise the structural
+ceiling, expand the benchmark beyond six questions and one codebase, and
+investigate whether larger context windows or chain-of-thought prompting change
+the tool-vs-text trade-off.

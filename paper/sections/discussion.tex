@@ -1,6 +1,34 @@
 \section{Discussion}
 \label{sec:discussion}
-%% Question-style paragraphs that answer what a reviewer will ask:
-%%   \paragraph{Is more X always better?} No. ...
-%% End limits with "We leave this for future work." -- do not hide them.
-\paragraph{\todo{Reviewer question}?} \todo{Short, honest answer.}
+
+\paragraph{Graph completeness is the primary ceiling.}
+The 31\,\% callback-gap failure rate reveals that the binary question of graph
+completeness---\emph{is the target reachable at all?}---dominates accuracy more
+than the choice of retrieval strategy or delivery mode.
+Q1 and Q4 are hard for any graph-based condition regardless of LLM or delivery
+mode: neither graph contains an edge crossing the function-pointer boundary, so
+no amount of graph traversal can bridge the gap.
+Extending the graph with function-pointer recovery (via points-to analysis or
+dynamic call recording) would directly raise the reachable accuracy ceiling for
+these questions.
+
+\paragraph{Text slices as a practical baseline.}
+Text slices match or exceed tool conditions in exact accuracy at a fraction of
+the token cost (3,500--5,500 tokens vs.\ 39,000--86,000 for tool conditions).
+For Q5 on \qwen, the BFS slice happens to include
+\texttt{sqlite3\_str\_vappendf} at shallow depth, while the tool agent
+stops at a callee one hop deeper (\texttt{printfTempBuf}).
+This suggests that for shallow-target questions where the answer lies within a
+small BFS radius of the entry, a text slice may be sufficient and is
+substantially cheaper.
+The model-dependence of the pattern (\nemotron solved Q5 in both tool
+conditions) cautions against generalising from a single model.
+
+\paragraph{Caller/callee tools reduce unsupported edge citations.}
+The 2.4-fold reduction in not-in-graph edge citations when caller/callee tools
+are available (12\,\% vs.\ 28\,\%) suggests that edge-traversal tools provide
+navigational grounding beyond raw source text: even when tools do not change
+the final answer, they appear to constrain the model's reasoning chain to edges
+that actually exist in the graph.
+This grounding effect may become more important at larger benchmark scale where
+fabricated reasoning chains propagate errors further.

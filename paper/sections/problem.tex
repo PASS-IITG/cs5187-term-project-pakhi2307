@@ -1,11 +1,34 @@
 \section{Problem Statement}
 \label{sec:problem}
-%% "We now state the problem precisely." Define every set/symbol (macros in
-%% macros.tex). \paragraph{Goal.} with the formula. Say why it is hard
-%% (cite the known complexity result). End with a question-paragraph that
-%% answers the obvious objection: \paragraph{Why not ...?}
-\todo{Definitions.}
 
-\paragraph{Goal.} \todo{Formula and the one or two things we look for.}
+We study the following \emph{function-level fault localisation} task: given
+(i)~an entry function from which the bug manifests, (ii)~a natural-language
+description of the observed symptom, and (iii)~optional access to a call-graph
+of the target codebase, identify the single function most likely to be faulty.
 
-\paragraph{Why not \todo{the obvious alternative}?} \todo{Answer.}
+\paragraph{Target program.}
+We use \sqlite~3.30.1 (commit \texttt{25e9591}, tag \texttt{version-3.30.1}),
+a widely studied embedded SQL engine comprising approximately 170,000 lines of
+C across eleven core source files~\cite{sqlite}.
+\sqlite is a suitable subject because its source is publicly available, it is
+used in real-world FL research, and its function-pointer-heavy dispatch tables
+directly expose the structural-gap challenge studied here.
+
+\paragraph{Benchmark.}
+We evaluate on six questions drawn from the course benchmark, each specifying
+an entry function, a symptom description, and a ground-truth function.
+The targets span SQL query processing (\texttt{sqlite3Select},
+\texttt{flattenSubquery}, \texttt{withExpand}), string formatting
+(\texttt{sqlite3\_str\_vappendf}), name resolution
+(\texttt{resolveOrderByTermToExprList}), and aggregate accumulation
+(\texttt{resetAccumulator}).
+Two questions (Q1 and Q4) target functions that are reachable from the entry
+only via function-pointer calls and are therefore absent from both graphs.
+
+\paragraph{Structural challenge.}
+\sqlite relies heavily on function pointers stored in virtual-table and callback
+structs.
+Neither the compile-time nor the syntactic graph models these edges, creating
+hard structural gaps between the entry function and certain targets.
+These gaps set a hard upper bound on the reachable accuracy of any graph-only
+approach.
