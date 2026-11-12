@@ -96,6 +96,28 @@ class LLM:
             raise EmptyResponse(f"empty message from provider (finish_reason={fr})")
         msg = r.choices[0].message.model_dump(exclude_none=True)
         msg.setdefault("role", "assistant")
+        if r.choices[0].finish_reason == "stop" and not (msg.get("content") or "").strip() and not msg.get("tool_calls"):
+            raise EmptyResponse("empty reply (finish_reason=stop, no content, no tool calls)")
+        content = msg.get("content") or ""
+        if content and not msg.get("tool_calls"):
+            non_ascii = sum(1 for c in content if ord(c) > 127)
+            # Non-ASCII ratio guard: catches Unicode garbage (τ, 那些, ζ ...).
+            # For short responses the threshold is tighter: even 2 non-ASCII chars in
+            # < 80 chars is suspicious.
+            short = len(content) < 80
+            if (short and non_ascii > 1) or (not short and non_ascii / len(content) > 0.20):
+                raise EmptyResponse(
+                    f"garbage response detected: {non_ascii}/{len(content)} non-ASCII chars "
+                    f"(sample: {repr(content[:60])})"
+                )
+            # Minimum-length guard: a valid final-answer JSON is at least ~130 chars.
+            # If tools were offered and the model neither called a tool nor wrote a
+            # plausible answer, the response is broken; retry.
+            if tools and len(content) < 150:
+                raise EmptyResponse(
+                    f"suspiciously short reply with tools offered "
+                    f"({len(content)} chars): {repr(content[:80])}"
+                )
         u = r.usage
         usage = {"prompt_tokens": getattr(u, "prompt_tokens", 0) or 0,
                  "completion_tokens": getattr(u, "completion_tokens", 0) or 0,

@@ -17,7 +17,9 @@ for q in sorted(gt):
     line = f"{q:5}{gt[q][:25]:26}"
     for c in conds:
         L = by.get((q, c), [])
-        ex = sum(1 for a, _ in L if a == gt[q]); t3 = sum(1 for a, t in L if gt[q] in t)
+        ex = sum(1 for a, _ in L if a == gt[q])
+        # top3: credit if gt is in top3 list OR if answer_function itself is correct
+        t3 = sum(1 for a, t in L if gt[q] in t or a == gt[q])
         line += f"{f'exact {ex}/{len(L)} top3 {t3}/{len(L)}':24}"
         if c == "NOCTX" and ex >= 2: flagged.append(q)
         if c != "NOCTX": tot[c] += (ex > 0)

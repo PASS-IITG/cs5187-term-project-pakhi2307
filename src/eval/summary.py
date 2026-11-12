@@ -4,7 +4,7 @@ from answer import parse_final, hard
 CSV = os.path.expanduser("~/cs5187/benchmark_work/questions.csv")
 gt = {r["id"]: r["ground_truth_function"] for r in csv.DictReader(open(CSV, encoding="utf-8"))}
 qids = sorted(gt)
-CONDS = ["NOCTX", "SYN-TOOL", "CT-TOOL", "SYN-TEXT", "CT-TEXT"]
+CONDS = ["NOCTX", "SYN-TOOL", "CT-TOOL", "SYN-TEXT", "CT-TEXT", "CT-ct_calls", "CT-ct_types", "CT-source_only", "SYN-source_only"]
 
 def load(p):
     by = collections.defaultdict(list)
@@ -29,11 +29,16 @@ for p in sorted(glob.glob("results/runs_*.jsonl")):
             L = by.get((q, c), [])
             if not L:
                 cells.append("-"); continue
-            ex = sum(x["ans"] == gt[q] for x in L); t3 = sum(gt[q] in x["top3"] for x in L)
+            ex = sum(x["ans"] == gt[q] for x in L)
+            # top3: credit if gt is in top3 list OR if answer_function itself is correct
+            t3 = sum((gt[q] in x["top3"]) or (x["ans"] == gt[q]) for x in L)
             cells.append(f"{ex}/{len(L)} ({t3}/{len(L)})")
         out.append(f"| {q}{' (flagged)' if q in flagged else ''} | {gt[q]} | " + " | ".join(cells) + " |")
     def hit(q, c, top=False):
-        return any((gt[q] in x["top3"]) if top else (x["ans"] == gt[q]) for x in by.get((q, c), []))
+        return any(
+            ((gt[q] in x["top3"]) or (x["ans"] == gt[q])) if top else (x["ans"] == gt[q])
+            for x in by.get((q, c), [])
+        )
     for label, qs in (("All questions", qids), ("Excluding flagged", [q for q in qids if q not in flagged])):
         out.append("")
         out.append(f"{label} (n={len(qs)}): " + "; ".join(

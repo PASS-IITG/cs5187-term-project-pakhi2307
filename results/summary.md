@@ -4,18 +4,18 @@
 
 Cells are exact (answer in top 3), as correct/runs.
 
-| Q | ground truth | NOCTX | SYN-TOOL | CT-TOOL | SYN-TEXT | CT-TEXT |
-|---|---|---|---|---|---|---|
-| Q001 | resolveOrderByTermToExprList | 1/3 (3/3) | 0/1 (1/1) | 0/1 (0/1) | 0/1 (0/1) | 0/1 (0/1) |
-| Q002 | sqlite3Select | 0/3 (3/3) | 0/1 (0/1) | 0/1 (1/1) | 0/1 (1/1) | 0/1 (1/1) |
-| Q003 | flattenSubquery | 0/3 (0/3) | 0/1 (1/1) | 0/1 (1/1) | 0/1 (1/1) | 0/1 (0/1) |
-| Q004 | withExpand | 0/3 (0/3) | 0/1 (1/1) | 0/1 (0/1) | 0/1 (0/1) | 0/1 (0/1) |
-| Q005 | sqlite3_str_vappendf | 0/3 (0/3) | 1/1 (1/1) | 1/1 (1/1) | 1/1 (1/1) | 1/1 (1/1) |
-| Q006 | resetAccumulator | 0/3 (0/3) | 0/1 (0/1) | 0/1 (0/1) | 0/1 (0/1) | 0/1 (0/1) |
+| Q | ground truth | NOCTX | SYN-TOOL | CT-TOOL | SYN-TEXT | CT-TEXT | CT-ct_calls | CT-ct_types | CT-source_only | SYN-source_only |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Q001 | resolveOrderByTermToExprList | 1/3 (3/3) | 0/1 (1/1) | 0/1 (0/1) | 0/1 (0/1) | 0/1 (0/1) | - | - | - | - |
+| Q002 | sqlite3Select | 0/3 (3/3) | 0/1 (0/1) | 0/1 (1/1) | 0/1 (1/1) | 0/1 (1/1) | - | - | - | - |
+| Q003 | flattenSubquery | 0/3 (0/3) | 0/1 (1/1) | 0/1 (1/1) | 0/1 (1/1) | 0/1 (0/1) | - | - | - | - |
+| Q004 | withExpand | 0/3 (0/3) | 0/1 (1/1) | 0/1 (0/1) | 0/1 (0/1) | 0/1 (0/1) | - | - | - | - |
+| Q005 | sqlite3_str_vappendf | 0/3 (0/3) | 1/1 (1/1) | 1/1 (1/1) | 1/1 (1/1) | 1/1 (1/1) | - | - | - | - |
+| Q006 | resetAccumulator | 0/3 (0/3) | 0/1 (0/1) | 0/1 (0/1) | 0/1 (0/1) | 0/1 (0/1) | - | - | - | - |
 
-All questions (n=6): SYN-TOOL exact 1, top3 4; CT-TOOL exact 1, top3 3; SYN-TEXT exact 1, top3 3; CT-TEXT exact 1, top3 2
+All questions (n=6): SYN-TOOL exact 1, top3 4; CT-TOOL exact 1, top3 3; SYN-TEXT exact 1, top3 3; CT-TEXT exact 1, top3 2; CT-ct_calls exact 0, top3 0; CT-ct_types exact 0, top3 0; CT-source_only exact 0, top3 0; SYN-source_only exact 0, top3 0
 
-Excluding flagged (n=6): SYN-TOOL exact 1, top3 4; CT-TOOL exact 1, top3 3; SYN-TEXT exact 1, top3 3; CT-TEXT exact 1, top3 2
+Excluding flagged (n=6): SYN-TOOL exact 1, top3 4; CT-TOOL exact 1, top3 3; SYN-TEXT exact 1, top3 3; CT-TEXT exact 1, top3 2; CT-ct_calls exact 0, top3 0; CT-ct_types exact 0, top3 0; CT-source_only exact 0, top3 0; SYN-source_only exact 0, top3 0
 
 | condition | runs | valid JSON | forced_final | mean turns | mean tool calls | mean prompt tokens (summed over turns) | mean completion tokens | mean latency s |
 |---|---|---|---|---|---|---|---|---|
@@ -29,18 +29,18 @@ Excluding flagged (n=6): SYN-TOOL exact 1, top3 4; CT-TOOL exact 1, top3 3; SYN-
 
 Cells are exact (answer in top 3), as correct/runs.
 
-| Q | ground truth | NOCTX | SYN-TOOL | CT-TOOL | SYN-TEXT | CT-TEXT |
-|---|---|---|---|---|---|---|
-| Q001 | resolveOrderByTermToExprList | 0/3 (0/3) | 1/1 (1/1) | 0/1 (0/1) | 0/1 (0/1) | 0/1 (0/1) |
-| Q002 (flagged) | sqlite3Select | 3/3 (3/3) | 0/1 (1/1) | 0/1 (1/1) | 0/1 (0/1) | 1/1 (1/1) |
-| Q003 | flattenSubquery | 0/3 (0/3) | 0/1 (0/1) | 0/1 (0/1) | 0/1 (0/1) | 0/1 (0/1) |
-| Q004 | withExpand | 0/3 (0/3) | 0/1 (0/1) | 0/1 (0/1) | 0/1 (0/1) | 0/1 (0/1) |
-| Q005 | sqlite3_str_vappendf | 0/3 (0/3) | 0/1 (1/1) | 0/1 (1/1) | 1/1 (1/1) | 1/1 (0/1) |
-| Q006 | resetAccumulator | 0/3 (0/3) | 0/1 (0/1) | 0/1 (0/1) | 0/1 (0/1) | 0/1 (0/1) |
+| Q | ground truth | NOCTX | SYN-TOOL | CT-TOOL | SYN-TEXT | CT-TEXT | CT-ct_calls | CT-ct_types | CT-source_only | SYN-source_only |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Q001 | resolveOrderByTermToExprList | 0/3 (0/3) | 1/1 (1/1) | 0/1 (0/1) | 0/1 (0/1) | 0/1 (0/1) | 0/1 (0/1) | 0/1 (0/1) | 0/1 (0/1) | 0/1 (0/1) |
+| Q002 (flagged) | sqlite3Select | 3/3 (3/3) | 0/1 (1/1) | 0/1 (1/1) | 0/1 (0/1) | 1/1 (1/1) | 0/1 (1/1) | 0/1 (1/1) | 1/1 (1/1) | 0/1 (1/1) |
+| Q003 | flattenSubquery | 0/3 (0/3) | 0/1 (0/1) | 0/1 (0/1) | 0/1 (0/1) | 0/1 (0/1) | 0/1 (0/1) | 0/1 (0/1) | 0/1 (0/1) | 0/1 (0/1) |
+| Q004 | withExpand | 0/3 (0/3) | 0/1 (0/1) | 0/1 (0/1) | 0/1 (0/1) | 0/1 (0/1) | 0/1 (0/1) | 0/1 (0/1) | 0/1 (0/1) | 0/1 (0/1) |
+| Q005 | sqlite3_str_vappendf | 0/3 (0/3) | 0/1 (1/1) | 0/1 (1/1) | 1/1 (1/1) | 1/1 (1/1) | 0/1 (1/1) | 0/1 (1/1) | 0/1 (1/1) | 0/1 (1/1) |
+| Q006 | resetAccumulator | 0/3 (0/3) | 0/1 (0/1) | 0/1 (0/1) | 0/1 (0/1) | 0/1 (0/1) | 0/1 (0/1) | 0/1 (0/1) | 0/1 (0/1) | 0/1 (0/1) |
 
-All questions (n=6): SYN-TOOL exact 1, top3 3; CT-TOOL exact 0, top3 2; SYN-TEXT exact 1, top3 1; CT-TEXT exact 2, top3 1
+All questions (n=6): SYN-TOOL exact 1, top3 3; CT-TOOL exact 0, top3 2; SYN-TEXT exact 1, top3 1; CT-TEXT exact 2, top3 2; CT-ct_calls exact 0, top3 2; CT-ct_types exact 0, top3 2; CT-source_only exact 1, top3 2; SYN-source_only exact 0, top3 2
 
-Excluding flagged (n=5): SYN-TOOL exact 1, top3 2; CT-TOOL exact 0, top3 1; SYN-TEXT exact 1, top3 1; CT-TEXT exact 1, top3 0
+Excluding flagged (n=5): SYN-TOOL exact 1, top3 2; CT-TOOL exact 0, top3 1; SYN-TEXT exact 1, top3 1; CT-TEXT exact 1, top3 1; CT-ct_calls exact 0, top3 1; CT-ct_types exact 0, top3 1; CT-source_only exact 0, top3 1; SYN-source_only exact 0, top3 1
 
 | condition | runs | valid JSON | forced_final | mean turns | mean tool calls | mean prompt tokens (summed over turns) | mean completion tokens | mean latency s |
 |---|---|---|---|---|---|---|---|---|
@@ -49,6 +49,10 @@ Excluding flagged (n=5): SYN-TOOL exact 1, top3 2; CT-TOOL exact 0, top3 1; SYN-
 | CT-TOOL | 6 | 6 | 6 | 15.0 | 15.0 | 54442 | 687 | 17 |
 | SYN-TEXT | 6 | 6 | 0 | 1.0 | 0.0 | 3401 | 276 | 4 |
 | CT-TEXT | 6 | 6 | 0 | 1.0 | 0.0 | 5208 | 361 | 6 |
+| CT-ct_calls | 6 | 6 | 6 | 15.0 | 15.0 | 67778 | 708 | 20 |
+| CT-ct_types | 6 | 6 | 6 | 15.0 | 15.0 | 60796 | 702 | 17 |
+| CT-source_only | 6 | 6 | 6 | 15.0 | 15.0 | 208833 | 759 | 49 |
+| SYN-source_only | 6 | 6 | 6 | 15.0 | 15.0 | 210621 | 804 | 55 |
 
 Notes: 6 questions; one run per tool condition; NOCTX = 3 sampled repeats (temperature 0.7). A question is flagged if the
 no-context answer is exact in 2 of 3 repeats. Path verification is not included (final answer only). TEXT = graph_slice, budget ceiling 6,000 tokens (slices end below it unless cut).
