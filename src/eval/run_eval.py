@@ -14,6 +14,8 @@ from graph_tool import run_tool_agent, run_record      # noqa: E402
 from tools.graph_slice import graph_slice              # noqa: E402
 DBS = {"SYN-TOOL": "src/graphs/graph_syn.db", "CT-TOOL": "src/graphs/graph_ct_v2.db",
        "SYN-TEXT": "src/graphs/graph_syn.db", "CT-TEXT": "src/graphs/graph_ct_v2.db"}
+ABL = {"CT-ct_calls": ("src/graphs/graph_ct_v2.db", "ct_calls"), "CT-ct_types": ("src/graphs/graph_ct_v2.db", "ct_types"),
+       "CT-source_only": ("src/graphs/graph_ct_v2.db", "source_only"), "SYN-source_only": ("src/graphs/graph_syn.db", "source_only")}
 NOCTX_PREFIX = ("The following question is about the SQLite database engine source code. "
                 "No code and no tools are provided. Answer from your own knowledge.\n\n")
 
@@ -99,7 +101,8 @@ def main():
                     elif cond.endswith("-TEXT"):
                         res = run_text(llm, q, DBS[cond], a.max_tokens, a.budget)
                     else:
-                        res = run_tool_agent(llm, q["question"], DBS[cond], a.root, "full",
+                        res = run_tool_agent(llm, q["question"], ABL[cond][0] if cond in ABL else DBS[cond], a.root,
+                                             ABL[cond][1] if cond in ABL else "full",
                                              question_id=q["id"])
                 except LLMError as e:
                     n_err += 1

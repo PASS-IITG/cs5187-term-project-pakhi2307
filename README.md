@@ -264,4 +264,3 @@ No upstream bug reports or patches were filed against SQLite as part of this pro
 ## License
 
 MIT — see [LICENSE](LICENSE).
-
