@@ -11,34 +11,36 @@ Our work differs fundamentally: we use neither test suites nor execution coverag
 the LLM reasons directly from a natural-language symptom description and optional
 call-graph context.
 
-\paragraph{LLMs for debugging and program repair.}
-LLMs have been extensively applied to bug explanation, test generation, and automated
-program repair~\cite{sobania23chatgpt,iris24}.
-Recent interactive frameworks evaluate model-generated code via execution feedback
-or compiler diagnostics, achieving notable bug-fixing rates.
+\paragraph{LLMs for code evaluation and program repair.}
+LLMs have been extensively evaluated on code generation and automated program
+repair~\cite{sobania23chatgpt,liu23evalplus}.
+While benchmark evaluations such as EvalPlus~\cite{liu23evalplus} assess standalone
+generation correctness, automated repair tools prompt models iteratively with compiler
+feedback or test outcomes.
 Our study focuses on the upstream task of identifying the faulty function
 prior to repair, investigating whether call-graph representations provide
-sufficient topological guidance to isolate root causes.
+sufficient topological guidance to isolate root causes in complex C software.
 
-\paragraph{Graph-guided retrieval and code agents.}
-A growing body of work explores structured graph navigation for repository-level
-software engineering tasks.
-For code completion and generation, systems such as RepoFuse~\cite{repofuse24} and
-GraphCoder~\cite{graphcoder24} extract dependency and call graphs to retrieve
-cross-file context beyond simple lexical similarity.
-In vulnerability analysis, Vul-RAG~\cite{vulrag24} injects knowledge graph paths into
-LLM prompts to ground security reasoning.
-Most related to our setting, structure-guided agents such as SGAgent~\cite{sgagent24}
-use call and control-flow graphs to navigate repositories for issue localisation.
-Our contribution isolates the comparative performance and token cost of
-interactive function-calling tool use versus direct prompt-injected text slices,
-while auditing edge-citation validity on tool-agent runs and examining function-pointer
-reachability limits on C software.
+\paragraph{Repository navigation agents and context engineering.}
+Recent work investigates how large language models can navigate repository-scale
+codebases using structured tools.
+Most closely related to our agent architecture, \citet{yildiz25jitvul} introduce
+the JitVul benchmark, deploying ReAct-style agents equipped with interprocedural
+navigation tools (\texttt{get\_callers}, \texttt{get\_callees}, and definition retrieval)
+to detect vulnerabilities in C repositories.
+In an empirical investigation of context engineering, \citet{contextengineering24}
+demonstrate that ``one size does not fit all'' when retrieving repository context:
+while navigation-based agents dynamically explore dependencies, they incur a
+10--20$\times$ computational cost penalty compared to static context injection.
+Our empirical findings directly mirror this cost trade-off, showing a 10--23$\times$
+prompt-token multiplier for tool-navigating agents over static BFS text slices, while
+providing an edge-level audit of the structural gaps and cited edge validity
+inherent to static call graphs on large C systems.
 
 \paragraph{LLM agents with structured tool use.}
 The \textsc{ReAct} framework~\cite{yao23react} established the
 reason-act-observe pattern for autonomous tool-using agents.
-We apply this paradigm to static graph exploration, ablating the available
+We apply this paradigm to static call-graph exploration, ablating the available
 tool primitives (call chains, type hierarchies, taint paths, raw source retrieval)
 to isolate which specific tools assist localisation and whether tool access reduces
-the fabrication of nonexistent call relationships.
+the citing of edges not supported by the underlying call graph.

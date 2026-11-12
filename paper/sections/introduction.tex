@@ -22,8 +22,9 @@ data-flow---without loading the full source.
 Alternatively, a breadth-first slice of the same graph can be serialised as
 plain text and injected into the prompt, trading repeated tool-call overhead
 for a single, larger context window.
-Both strategies have been proposed in recent work, but a direct controlled
-comparison on a real, well-known codebase under identical conditions is lacking.
+Both strategies have been proposed in recent work~\cite{yildiz25jitvul,contextengineering24},
+but to our knowledge, among the work we reviewed, a direct controlled comparison on a real,
+well-known codebase under identical conditions is lacking.
 
 We build two call-graphs for the \sqlite~3.30.1 source: a compile-time graph
 extracted with \clang~18.1.3 (417 functions, 2{,}438 call edges, 84 taint
