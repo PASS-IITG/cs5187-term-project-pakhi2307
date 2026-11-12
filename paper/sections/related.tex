@@ -7,36 +7,38 @@ pass/fail test-coverage data.
 Tarantula~\cite{jones05tarantula} introduced the coefficient refined by many
 later techniques.
 A comprehensive survey is given by \citet{wong16survey}.
-Our work differs fundamentally: we use neither test suites nor coverage data;
-the LLM reasons from a natural-language symptom description and optional
+Our work differs fundamentally: we use neither test suites nor execution coverage;
+the LLM reasons directly from a natural-language symptom description and optional
 call-graph context.
 
-\paragraph{Learning-based fault localisation.}
-Neural approaches learn suspiciousness from execution traces or static
-representations.
-Graph neural networks have been applied to program dependence graphs and
-call-graph slices to rank faulty methods, but these approaches are trained
-on labelled bug datasets.
-We instead provide the graph to an instruction-tuned LLM and study whether
-it can navigate the graph to identify faulty functions without task-specific
-training.
-
 \paragraph{LLMs for debugging and program repair.}
-LLMs have been applied to bug explanation, test generation, and automated
-repair~\cite{sobania23chatgpt}.
-Conversational repair systems prompt models iteratively with compiler feedback,
-achieving competitive patch rates.
-Agent-based approaches scale LLM-based FL to project-level context via
-retrieval-augmented generation.
-Our contribution relative to these is the controlled isolation of the effect of
-two specific graph-retrieval modalities (tool-based navigation vs.\ text slice)
-under identical conditions.
+LLMs have been extensively applied to bug explanation, test generation, and automated
+program repair~\cite{sobania23chatgpt,iris24}.
+Recent interactive frameworks evaluate model-generated code via execution feedback
+or compiler diagnostics, achieving notable bug-fixing rates.
+Our study focuses on the upstream task of identifying the faulty function
+prior to repair, investigating whether call-graph representations provide
+sufficient topological guidance to isolate root causes.
 
-\paragraph{LLM agents with structured retrieval.}
+\paragraph{Graph-guided retrieval and code agents.}
+A growing body of work explores structured graph navigation for repository-level
+software engineering tasks.
+For code completion and generation, systems such as RepoFuse~\cite{repofuse24} and
+GraphCoder~\cite{graphcoder24} extract dependency and call graphs to retrieve
+cross-file context beyond simple lexical similarity.
+In vulnerability analysis, Vul-RAG~\cite{vulrag24} injects knowledge graph paths into
+LLM prompts to ground security reasoning.
+Most related to our setting, structure-guided agents such as SGAgent~\cite{sgagent24}
+use call and control-flow graphs to navigate repositories for issue localisation.
+Our contribution isolates the comparative performance and token cost of
+interactive function-calling tool use versus direct prompt-injected text slices,
+while explicitly auditing edge-level hallucination rates and function-pointer
+reachability limits on C software.
+
+\paragraph{LLM agents with structured tool use.}
 The \textsc{ReAct} framework~\cite{yao23react} established the
-reason-act-observe pattern for tool-using agents.
-Recent systems apply this pattern to code navigation, browsing repository files
-iteratively.
-Our work extends this line by ablating the tool set, distinguishing
-caller/callee navigation, type queries, and taint paths from raw source access,
-and quantifying the effect on both accuracy and edge-citation correctness.
+reason-act-observe pattern for autonomous tool-using agents.
+We apply this paradigm to static graph exploration, ablating the available
+tool primitives (call chains, type hierarchies, taint paths, raw source retrieval)
+to isolate which specific tools assist localisation and whether tool access reduces
+the fabrication of nonexistent call relationships.

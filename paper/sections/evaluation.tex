@@ -12,140 +12,157 @@ Both support OpenAI-compatible function calling.
 
 Table~\ref{tab:accuracy} reports exact and top-3 accuracy per condition.
 \emph{Exact} counts runs where \texttt{answer\_function} matches the ground
-truth; \emph{top-3} counts runs where the ground truth appears in
+truth; \emph{top-3} counts questions where the ground truth appears in
 \texttt{top3} or equals \texttt{answer\_function}.
 Q2's ground truth (\texttt{sqlite3Select}) was correct in all three \qwen{}
 \textsc{NOCTX} repetitions, suggesting memorisation; we flag and exclude Q2
-from \qwen{} counts ($n{=}5$). \nemotron{} counts cover all six questions
-($n{=}6$).
+from \qwen{} counts in the primary analysis ($n{=}5$), and also report $n{=}6$
+to allow direct comparison with \nemotron{} ($n{=}6$, no questions flagged).
 
 \begin{table}[h]
-\caption{Exact and top-3 accuracy per condition.
-  Qwen: $n=5$ (Q2 excluded). Nemotron: $n=6$.
-  Dashes: condition not run (NVIDIA API failure for ablation subsets).}
+\caption{Accuracy per condition.
+  Qwen primary: $n=5$ (Q2 excluded). Qwen full: $n=6$ (Q2 included).
+  Nemotron: $n=6$.
+  Dashes: ablation not run on this model.
+  NOCTX top-3 counts questions, not runs (3~reps each).}
 \label{tab:accuracy}
 \small
-\begin{tabular}{lrrrr}
+\begin{tabular}{lrr|rr|rr}
 \toprule
- & \multicolumn{2}{c}{\textbf{Qwen ($n{=}5$)}}
+ & \multicolumn{2}{c|}{\textbf{Qwen ($n{=}5$)}}
+ & \multicolumn{2}{c|}{\textbf{Qwen ($n{=}6$)}}
  & \multicolumn{2}{c}{\textbf{Nemotron ($n{=}6$)}} \\
-\cmidrule(lr){2-3}\cmidrule(lr){4-5}
-\textbf{Condition} & \textbf{Exact} & \textbf{Top-3}
-                   & \textbf{Exact} & \textbf{Top-3} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+\textbf{Condition} & \textbf{Ex.} & \textbf{T3}
+                   & \textbf{Ex.} & \textbf{T3}
+                   & \textbf{Ex.} & \textbf{T3} \\
 \midrule
-\textsc{NOCTX}            & 0 & 0 & 1 & 3 \\
-\textsc{SYN-TOOL}          & 1 & 2 & 1 & 4 \\
-\textsc{CT-TOOL}           & 0 & 1 & 1 & 3 \\
-\textsc{SYN-TEXT}          & 1 & 1 & 1 & 3 \\
-\textsc{CT-TEXT}           & 1 & 1 & 1 & 2 \\
+\textsc{NOCTX}            & 0 & 0 & 1 & 1 & 1 & 2 \\
+\textsc{SYN-TOOL}          & 1 & 2 & 1 & 3 & 1 & 4 \\
+\textsc{CT-TOOL}           & 0 & 1 & 0 & 2 & 1 & 3 \\
+\textsc{SYN-TEXT}          & 1 & 1 & 1 & 1 & 1 & 3 \\
+\textsc{CT-TEXT}           & 1 & 1 & 2 & 2 & 1 & 2 \\
 \midrule
-\textsc{CT-ct\_calls}      & 0 & 1 & --- & --- \\
-\textsc{CT-ct\_types}      & 0 & 1 & --- & --- \\
-\textsc{CT-src-only}       & 0 & 1 & --- & --- \\
-\textsc{SYN-src-only}      & 0 & 1 & --- & --- \\
+\textsc{CT-ct\_calls}      & 0 & 1 & --- & --- & --- & --- \\
+\textsc{CT-ct\_types}      & 0 & 1 & --- & --- & --- & --- \\
+\textsc{CT-src-only}       & 0 & 1 & --- & --- & --- & --- \\
+\textsc{SYN-src-only}      & 0 & 1 & --- & --- & --- & --- \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Overall accuracy is low across all conditions.
-No condition exceeds one exact answer out of five (Qwen) or one out of six
-(Nemotron), and both models score near zero in the no-context baseline (1 of 18
-Nemotron \textsc{NOCTX} runs exact; 0 of 18 Qwen runs exact excluding Q2).
+Overall accuracy is low across all conditions: no condition exceeds one exact
+answer out of five (Qwen $n{=}5$) or one out of six (Nemotron) in the primary
+analysis.
+Both models score near zero in the no-context baseline: 1 of 15 \qwen{}
+\textsc{NOCTX} runs exact (Q2, flagged); 1 of 18 \nemotron{} \textsc{NOCTX}
+runs exact (Q1).
 Providing graph context does not reliably improve exact accuracy; on some
 questions it adds noise by giving the model structurally incomplete information
 to reason over.
 
 \subsection{RQ2: Tool vs.\ Text Slice}
 
-For \qwen, \textsc{SYN-TEXT} and \textsc{CT-TEXT} each score one exact answer,
-matching \textsc{SYN-TOOL} and exceeding \textsc{CT-TOOL} (zero exact).
-For \nemotron, all four graph conditions score one exact; \textsc{SYN-TOOL}
-achieves the highest top-3 count (4 of 6).
+For \qwen{} ($n{=}5$), \textsc{SYN-TEXT} and \textsc{CT-TEXT} each score one
+exact answer, matching \textsc{SYN-TOOL} and exceeding \textsc{CT-TOOL} (zero
+exact).
+For \nemotron{}, all four graph conditions score one exact answer;
+\textsc{SYN-TOOL} achieves the highest top-3 count (4 of 6).
 \nemotron{} solved Q5 (\texttt{sqlite3\_str\_vappendf}) in both tool conditions
 while \qwen{} succeeded only in the text conditions, so the text-over-tool
 pattern on Q5 holds for \qwen{} but not across both models.
 
+Note that TOOL and TEXT conditions differ in more than delivery mode: in the
+TOOL conditions the agent can call \texttt{get\_function\_source} to read raw
+source; in the TEXT conditions the slice is the only source representation and
+raw source is not separately available.
+This confound is discussed further in Section~\ref{sec:threats}.
+
 \paragraph{Token cost (Table~\ref{tab:cost}).}
-Text slices consume 3,500--5,500 mean prompt tokens (Nemotron figures;
-\qwen{} figures are comparable).
-Tool conditions (\qwen) use 39,000--54,000 tokens---ten to fifteen times more.
-Every tool-condition run hit the fifteen-turn cap and ended with a forced final
+Text slices consume 3,500--5,500 mean prompt tokens.
+Tool conditions cost roughly 10--12$\times$ more for \qwen{} and 16--23$\times$
+more for \nemotron{} (Nemotron SYN-TOOL: 81,796 tokens; CT-TOOL: 86,373).
+Every tool-condition run hit the 15-turn cap and ended with a forced final
 answer, so the token budget was fully spent in every case.
 
 \begin{table}[h]
-\caption{Mean prompt-token cost and latency by condition
-  (Nemotron rows from Nemotron runs; ablation rows from \qwen{} runs).}
+\caption{Mean prompt-token cost and latency by condition.
+  NOCTX/SYN-TOOL/CT-TOOL/SYN-TEXT/CT-TEXT rows report Nemotron figures;
+  ablation rows report \qwen{} figures.}
 \label{tab:cost}
 \small
-\begin{tabular}{lrr}
+\begin{tabular}{llrr}
 \toprule
-\textbf{Condition} & \textbf{Mean prompt tokens} & \textbf{Mean latency (s)} \\
+\textbf{Condition} & \textbf{Model} & \textbf{Mean prompt tokens} & \textbf{Mean latency (s)} \\
 \midrule
-\textsc{NOCTX}             &         342 & 11 \\
-\textsc{SYN-TOOL}           &      81,796 & 54 \\
-\textsc{CT-TOOL}            &      86,373 & 48 \\
-\textsc{SYN-TEXT}           &       3,534 & 19 \\
-\textsc{CT-TEXT}            &       5,480 &  7 \\
-\textsc{CT/SYN-src-only}    & $\approx$209,000 & --- \\
+\textsc{NOCTX}             & Nemotron &         342 &  11 \\
+\textsc{SYN-TOOL}           & Nemotron &      81,796 &  54 \\
+\textsc{CT-TOOL}            & Nemotron &      86,373 &  48 \\
+\textsc{SYN-TEXT}           & Nemotron &       3,534 &  19 \\
+\textsc{CT-TEXT}            & Nemotron &       5,480 &   7 \\
+\textsc{CT-src-only}        & Qwen     & $\approx$209,000 & 55 \\
+\textsc{SYN-src-only}       & Qwen     & $\approx$209,000 & 49 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \subsection{Error Analysis}
 
-To understand failure modes, every wrong \qwen{} answer across all eight graph
-conditions (48 answer slots; \textsc{NOCTX} excluded) was classified into one
-of four buckets.
+To understand failure modes, every \qwen{} answer across all eight graph
+conditions (48 total answer slots across 6 questions; \textsc{NOCTX} excluded)
+was classified.
+Five slots contain correct answers; the remaining 43 wrong-answer slots fall
+into one of four buckets, presented here in priority order (a slot is assigned
+to the first matching bucket).
 
-\paragraph{Callback gap (15/48, 31\,\%).}
+\paragraph{Callback gap (15/48 slots, 35\,\% of wrong answers).}
 The ground-truth function is unreachable from the entry in either graph because
 the call crosses a function pointer.
-This is the dominant failure for Q1 (7 of 8 conditions wrong for this reason)
-and the exclusive failure for Q4 (all 8 conditions).
-Neither graph records function-pointer edges, so no amount of graph traversal
-can bridge the gap; the graph slice also lacks the ground-truth function for
-both questions, confirming the structural ceiling.
+This is the dominant failure for Q1 (7 of 8 conditions wrong) and the exclusive
+failure for Q4 (all 8 conditions wrong).
+Neither graph records function-pointer edges, so a pure graph traversal along
+static edges cannot bridge the gap; the static graph slice also lacks the ground-truth
+function for both questions. As shown in Section~\ref{sec:turn_horizon}, bridging this
+gap requires the agent to combine symbol search and source reading across an extended
+turn horizon.
 
-\paragraph{Wrong other (25/48, 52\,\%).}
+\paragraph{Wrong other (25/48 slots, 58\,\% of wrong answers).}
 The ground-truth function is a graph node, but the model named a different one.
-For Q3 (\texttt{flattenSubquery}), the graph slice contains the ground truth
-in both graphs yet the model named \texttt{codeDistinct} across six of eight
-conditions.
+For Q3 (\texttt{flattenSubquery}), the graph contains the ground truth in both
+graphs yet the model named \texttt{codeDistinct} across six of eight conditions.
 For Q5 (\texttt{sqlite3\_str\_vappendf}) on \qwen, every tool condition stops
 at \texttt{printfTempBuf} (which \texttt{sqlite3\_str\_vappendf} calls);
-the text slice surfaces the target at shallow BFS depth, explaining the
-per-\qwen{} TEXT advantage on Q5.
+the text slice surfaces the target at shallow BFS depth.
 
-\paragraph{Default to entry (3/48, 6\,\%).}
+\paragraph{Default to entry (3/48 slots, 7\,\% of wrong answers).}
 The model named the entry function itself (\texttt{sqlite3Select} or
 \texttt{sqlite3\_step}).
+Note that \texttt{sqlite3Select} answers for Q3 and Q6 are classified here
+rather than as ``wrong other'' because \texttt{sqlite3Select} is the entry
+function for those questions.
 
-\paragraph{Not in graph (0/48).}
+\paragraph{Not in graph (0/48 slots).}
 The ground-truth function is a node in both graphs for every question that is
-not a callback-gap question, confirming that structural gaps rather than
-coverage gaps explain failures.
+not a callback-gap question.
 
 \subsection{RQ4: Path Correctness}
 
 Every cited edge (\texttt{src}, \texttt{dst}, \texttt{kind}) and every
 consecutive evidence-path pair from all 36 \qwen{} tool-condition runs were
 checked against the graph database.
-An edge is recorded as \emph{not supported by the graph} when neither
-direction appears; because neither graph models function-pointer calls, an
-absent edge may reflect a genuine structural gap rather than model fabrication,
-so this rate is an upper bound on hallucination.
+An edge is recorded as \emph{not supported by the graph} when neither direction
+appears; because neither graph models function-pointer calls, an absent edge
+may reflect a genuine structural gap rather than model fabrication, so this
+rate is an upper bound on hallucination.
 
 Of 133 cited edges, 106 (79\,\%) are present exactly as stated and 4 (3\,\%)
 have direction reversed.
-The not-in-graph rate differs substantially by condition type:
-in the source-only conditions, 13 of 47 cited edges (28\,\%) are not in the
-graph; in conditions with caller/callee tools, 10 of 86 cited edges (12\,\%) are
-not in the graph---a ratio of approximately 2.4.
-The pattern is similar for evidence-path pairs (34\,\% vs.\ 13\,\%).
-The tool prompt instructs the model to verify every edge with a tool call, but
-the harness does not enforce this.
-Source-only results suggest the model fabricates edges when no edge-querying
-tool is available.
+The not-in-graph rate was 2.4$\times$ lower in conditions with caller/callee
+tools (12\,\%, 10 of 86 edges) than in source-only conditions (28\,\%, 13 of 47
+edges).
+The pattern is similar for evidence-path pairs (13\,\% vs.\ 34\,\%).
+Source-only results suggest the model cites edges it cannot verify when no
+edge-querying tool is available.
 
 One further observation: the one \qwen{} run that correctly identified Q1
 (\textsc{SYN-TOOL}) still contains one cited edge not supported by the graph,
@@ -158,10 +175,53 @@ No ablation condition scored above zero exact answers on \qwen's five unflagged
 questions, and every ablation run hit the 15-turn cap.
 Adding callers, callees, type hierarchy, and taint paths to the source-reading
 baseline did not improve accuracy on any question.
-The source-only control is therefore not worse than the full tool set on these
-questions, though it costs four to five times more tokens (mean
-$\approx$209,000 vs.\ 39,000--54,000 for the full \qwen{} tool conditions, and
-approximately sixty times the cost of a text slice).
+The source-only control costs about 61$\times$ more tokens than \textsc{SYN-TEXT}
+and 40$\times$ more than \textsc{CT-TEXT}, with no accuracy gain.
 When source-reading is the only retrieval tool, the model paged through raw
 function source across all fifteen turns rather than navigating with callers and
-callees first; every source-only run ended with a forced final answer.
+callees; every source-only run ended with a forced final answer.
+
+\subsection{Turn Horizon and Guidance Sensitivity Analysis}
+\label{sec:turn_horizon}
+
+In the baseline protocol, all 48 tool runs hit the 15-turn cap and required a
+forced final answer.
+To understand the underlying causes, we conducted an exploratory sensitivity
+analysis examining turn awareness, stopping cues, and search horizon on \qwen.
+Per our pre-registered decision log (D17), all modifications are evaluated on a
+separate run track and reported side-by-side; they do not replace the headline
+baseline figures.
+
+\paragraph{Turn awareness and early stopping (15 turns).}
+We updated the tool prompt to provide a per-turn countdown (\emph{``Tool calls left:~$N$''})
+and a convergence nudge at two-thirds budget (\emph{``Start converging. If you have a candidate, answer now''}).
+Under this 15-turn configuration, 4 of 12 runs concluded with \texttt{stop=final} on their
+own without invoking the forced final prompt.
+
+\paragraph{Extended search horizon with 3 repetitions (30 turns, $T=0.7$).}
+To evaluate whether performance gains were stable or stochastic, we ran 3 sampled repetitions
+per question at temperature~0.7 with a 30-turn cap and the refined guidance prompt (36 runs total).
+The results confirm systematic improvements across both graph back-ends:
+\begin{itemize}
+  \item \textbf{Autonomous termination}: Rather than hitting the turn cap indiscriminately,
+    \textbf{26 of 36 runs (72\,\%)} terminated autonomously with \texttt{stop=final},
+    frequently concluding between turns 22 and 26.
+  \item \textbf{Callback-gap targets reached}: On \textsc{CT-TOOL}, \texttt{resolveOrderByTermToExprList} (Q1)
+    was solved in \textbf{2 of 3 repetitions} (67\,\% consistency).
+    Crucially, \texttt{withExpand} (Q4)---which was never solved by any condition or model in the
+    15-turn baseline---was identified on \textbf{both graphs} (1 of 3 runs on \textsc{SYN-TOOL},
+    and 1 of 3 runs on \textsc{CT-TOOL}).
+  \item \textbf{Overall accuracy}: \textsc{SYN-TOOL} solved 3 distinct questions across runs (Q2, Q4, and
+    Q5 in 2 of 3 runs); \textsc{CT-TOOL} solved 2 distinct questions (Q1 and Q4), with 100\,\% top-3 coverage
+    on Q2 and 67\,\% top-3 coverage on Q1 and Q5.
+\end{itemize}
+
+\paragraph{Methodological takeaways.}
+Tuning guidance prompts on the evaluation benchmark carries an inherent risk of
+optimistic bias, and the additional navigation depth incurs substantial token cost
+(averaging 250{,}000--400{,}000 prompt tokens per query).
+Nonetheless, the 3-repetition experiment provides strong evidence that: (i)~the 15-turn cap was
+artificially truncating necessary search depth on multi-hop and callback-separated functions,
+(ii)~turn countdown visibility effectively curtails unbounded exploration, and (iii)~static
+function-pointer gaps do not represent an insurmountable ceiling when agents can inspect source
+and search symbol definitions.

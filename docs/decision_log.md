@@ -21,3 +21,20 @@
 **Related, still open.** (1) The shared file list must contain every question's ground-truth function; it will be fixed once, by a stated rule (files needed by verified questions), both graphs rebuilt from it, and the additions disclosed as an extended tier. (2) Extended-tier questions (wrong-result, assertion-only, corrupt-db, OOM) are reported as a separate tier, not mixed into the headline figure. (3) A second pin (3.25.0) is a last resort, since it requires rebuilding both graphs.
 
 **Known limitation recorded.** Calls through function pointers (walker callbacks, xSFunc) are counted as indirect_calls_unresolved and stored in function metadata, not drawn as edges, so call paths through callbacks have gaps in the CT graph. Questions whose true path uses a callback are to be flagged and reported separately.
+
+## D17 amendment: Prompt refinement and turn-horizon sensitivity protocol (2026-11-12)
+
+**Status:** agreed by A (Aditi) and B (Pakhi).
+
+**Decision.**
+1. To address common failure modes observed across all conditions (keyword-matching on symptoms, premature stopping, unread source, function pointer gaps), `TOOL_PROMPT` is refined to explicitly:
+   - Define the target as the faulty logic site whose code must change, distinguishing it from crash sites or functions matching symptom keywords.
+   - Require reading the candidate function source before emitting the final answer.
+   - Clarify that function-pointer calls are not present in static call edges, instructing the agent to search for registration sites if direct paths are absent.
+   - Provide a dynamic turn countdown ("Tool calls left: N") with a convergence nudge at 2/3 of the turn budget.
+   - Relax edge pressure from "verify every edge" to "cite only edges that tools returned".
+   - Request concise 1-2 sentence explanations.
+2. Protocol & Reporting:
+   - The refined prompt is frozen before execution and applied uniformly across all tool conditions.
+   - All results from this exploratory prompt and turn-horizon sensitivity runs (15 turns and 30 turns) are reported alongside the baseline runs in a dedicated sensitivity section, never overwriting or replacing the headline baseline figures.
+   - The paper will explicitly disclose that prompt refinement was evaluated on the benchmark set as a sensitivity analysis.

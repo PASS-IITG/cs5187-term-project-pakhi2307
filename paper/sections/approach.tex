@@ -24,30 +24,34 @@ We run the \texttt{graphify} tool (tree-sitter back-end) on the same eleven
 files and convert the resulting JSON to the shared schema via an adapter script.
 End-line values missing from the tree-sitter output are recovered via a
 brace-matching or next-definition heuristic.
+Because tree-sitter does not extract struct-field or taint information, the
+SYN graph does not support type-hierarchy or taint queries.
 
 \subsection{Tool Set}
 
-Both graphs expose an identical seven-tool API (Table~\ref{tab:tools}).
-All tools return 
-\texttt{\{"result":~\ldots,~"truncated":~bool\}} or
+The two graphs expose different tool subsets (Table~\ref{tab:tools}).
+The CT graph supports all seven tools; the SYN graph supports the five tools
+that require only call edges and function source, since it contains no
+type-hierarchy or taint edges.
+All tools return \texttt{\{"result":~\ldots,~"truncated":~bool\}} or
 \texttt{\{"error":~CODE,~\ldots\}} and are exposed to the LLM as OpenAI
 function-calling schemas.
 
 \begin{table}[h]
-\caption{Graph-navigation tools available to the agent.}
+\caption{Graph-navigation tools and their availability per graph.}
 \label{tab:tools}
 \small
-\begin{tabular}{lp{5.2cm}}
+\begin{tabular}{lp{4.0cm}cc}
 \toprule
-\textbf{Tool} & \textbf{Description} \\
+\textbf{Tool} & \textbf{Description} & \textbf{CT} & \textbf{SYN} \\
 \midrule
-\texttt{get\_callers(fn)}           & Direct callers of a function \\
-\texttt{get\_callees(fn)}           & Direct callees of a function \\
-\texttt{get\_type\_hierarchy(type)} & Struct/union fields and types \\
-\texttt{find\_call\_path(src, dst)} & BFS shortest call chain \\
-\texttt{get\_taint\_paths(param)}   & Sinks reachable from a tainted parameter \\
-\texttt{get\_function\_source(fn)}  & Paginated source lines \\
-\texttt{search\_functions(substr)}  & Fuzzy name search \\
+\texttt{get\_callers(fn)}           & Direct callers of a function        & \checkmark & \checkmark \\
+\texttt{get\_callees(fn)}           & Direct callees of a function        & \checkmark & \checkmark \\
+\texttt{find\_call\_path(src, dst)} & BFS shortest call chain             & \checkmark & \checkmark \\
+\texttt{get\_function\_source(fn)}  & Paginated source lines              & \checkmark & \checkmark \\
+\texttt{search\_functions(substr)}  & Fuzzy name search                   & \checkmark & \checkmark \\
+\texttt{get\_type\_hierarchy(type)} & Struct/union fields and types       & \checkmark & --- \\
+\texttt{get\_taint\_paths(param)}   & Sinks reachable from tainted param  & \checkmark & --- \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -63,9 +67,9 @@ fields: \texttt{answer\_function}, \texttt{top3}, \texttt{evidence\_path},
 If no final answer is produced within 15 turns, a force-prompt is appended
 and one additional call is made without tools (\texttt{stopped\_by =
 forced\_final}).
-All 36 tool-condition runs (6 questions $\times$ 6 tool and ablation conditions)
-hit the 15-turn cap; every reported tool-condition answer is therefore a forced
-final answer.
+All 48 tool-condition runs---36 from \qwen{} (12 non-ablation, 24 ablation)
+and 12 from \nemotron{}---hit the 15-turn cap; every reported tool-condition
+answer is therefore a forced final answer.
 
 \subsection{Text Slice (TEXT Conditions)}
 
@@ -73,8 +77,8 @@ For the text conditions, a BFS from the entry function over \texttt{calls} edges
 serialises the call neighbourhood as plain text
 (\texttt{fn [file:line] calls: a, b, c}) within a token budget computed with
 the tiktoken \texttt{cl100k\_base} tokeniser.
-The slice is injected into the system prompt; the model answers in one turn
-without tool access.
+The slice is prepended to the user message, before the question.
+The model answers in one turn without tool access.
 
 \subsection{Evaluation Design}
 
@@ -82,24 +86,24 @@ Table~\ref{tab:conditions} summarises the nine conditions.
 \textsc{NOCTX} provides neither code nor tools and is repeated three times
 per question at temperature~0.7 to estimate baseline variance.
 All other conditions use temperature~0 and run once per question.
-Ablation conditions (last four rows of Table~\ref{tab:conditions}) were run on
-\qwen only: the NVIDIA API returned empty completions (finish\_reason=stop, no
-content, no tool calls) for \nemotron on every tool-subset call after six
-retries per turn; this failure does not occur in the full tool-set conditions.
+Ablation conditions (last four rows) were run on \qwen only: the NVIDIA API
+returned malformed or empty completions for \nemotron on every tool-subset
+call; this problem did not manifest in the full tool-set conditions.
 
 \begin{table}[h]
-\caption{Experimental conditions. ``All 7'' denotes the full tool set;
+\caption{Experimental conditions. ``5 tools'' denotes the SYN-compatible subset;
+  ``7 tools'' includes type-hierarchy and taint paths (CT only);
   ``src+search'' denotes \texttt{get\_function\_source} and
-  \texttt{search\_functions} only.}
+  \texttt{search\_functions}.}
 \label{tab:conditions}
 \small
-\begin{tabular}{llll}
+\begin{tabular}{lllp{3.5cm}}
 \toprule
 \textbf{Condition} & \textbf{Graph} & \textbf{Delivery} & \textbf{Tools} \\
 \midrule
 \textsc{NOCTX}           & ---      & None       & None \\
-\textsc{SYN-TOOL}         & SYN      & Tool calls & All 7 \\
-\textsc{CT-TOOL}          & CT-v2    & Tool calls & All 7 \\
+\textsc{SYN-TOOL}         & SYN      & Tool calls & 5 tools \\
+\textsc{CT-TOOL}          & CT-v2    & Tool calls & 7 tools \\
 \textsc{SYN-TEXT}         & SYN      & Text slice & None \\
 \textsc{CT-TEXT}          & CT-v2    & Text slice & None \\
 \textsc{CT-ct\_calls}     & CT-v2    & Tool calls & 4 (callers, callees, source, search) \\

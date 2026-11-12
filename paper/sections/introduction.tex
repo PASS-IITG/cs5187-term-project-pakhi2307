@@ -47,28 +47,27 @@ fault-localisation benchmark questions.
 \paragraph{Main findings.}
 \begin{enumerate}
   \item Graph context provides only marginal accuracy gains: neither model
-    exceeds one correct answer out of five or six across any single condition,
-    and 31\,\% of Qwen failure slots arise from function-pointer gaps that make
+    exceeds one correct answer out of five (Qwen, excluding Q2) or six across any single condition.
+    Furthermore, 15 of 48 answer slots (31\,\%) arise from function-pointer gaps that make
     the target structurally unreachable in both graphs.
   \item Text slices match or exceed the tool condition in exact accuracy at
-    ten to fifteen times lower token cost, though the pattern is
-    model-dependent: \nemotron solved Q5 in both tool conditions while \qwen
-    succeeded only in the text conditions.
-  \item Source-only retrieval (no edge-traversal tools) consumes four to five
-    times more tokens than the full \qwen tool conditions with no accuracy gain;
-    caller/callee tools reduce unsupported edge citations by a factor of
-    approximately 2.4 (28\,\% vs.\ 12\,\%).
+    about ten to twelve times lower token cost for \qwen and sixteen to twenty-three
+    times lower for \nemotron, though the exact pattern is model-dependent:
+    \nemotron solved Q5 in both tool conditions while \qwen succeeded only in the text conditions.
+  \item Source-only retrieval (no edge-traversal tools) consumes sixty times more tokens
+    than a text slice with no accuracy gain; caller/callee tools were associated with
+    a 2.4-fold lower rate of edges not supported by the graph (12\,\% vs.\ 28\,\%).
 \end{enumerate}
 
 \paragraph{Contributions.}
 \begin{enumerate}
   \item Two open call-graph databases for \sqlite~3.30.1 (compile-time and
-    syntactic), together with a seven-tool query API, a text-slice generator,
-    and a resumable multi-condition evaluation harness.
+    syntactic), together with graph query tool suites (7 tools for CT, 5 for SYN),
+    a text-slice generator, and a resumable multi-condition evaluation harness.
   \item An empirical study comparing tool-based and text-slice context delivery
     across two LLMs and nine experimental conditions, with a detailed error
     classification and path-correctness analysis.
-  \item A dataset of 48 annotated failure slots and 133 edge-verification
-    records identifying when graph-conditioned LLMs cite edges absent from the
-    graph.
+  \item An annotated dataset of 48 answer slots (including 43 failure slots) and 133
+    edge-verification records identifying when graph-conditioned LLMs cite edges
+    absent from the graph.
 \end{enumerate}

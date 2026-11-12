@@ -8,8 +8,10 @@ of the target codebase, identify the single function most likely to be faulty.
 
 \paragraph{Target program.}
 We use \sqlite~3.30.1 (commit \texttt{25e9591}, tag \texttt{version-3.30.1}),
-a widely studied embedded SQL engine comprising approximately 170,000 lines of
-C across eleven core source files~\cite{sqlite}.
+a widely studied embedded SQL engine~\cite{sqlite}.
+We extract call graphs from eleven core C source files spanning tokenization,
+parsing, query planning, expression resolution, and virtual machine execution
+(348{,}852 tokens, approximately 33{,}000 lines of C).
 \sqlite is a suitable subject because its source is publicly available, it is
 used in real-world FL research, and its function-pointer-heavy dispatch tables
 directly expose the structural-gap challenge studied here.
@@ -28,7 +30,8 @@ only via function-pointer calls and are therefore absent from both graphs.
 \paragraph{Structural challenge.}
 \sqlite relies heavily on function pointers stored in virtual-table and callback
 structs.
-Neither the compile-time nor the syntactic graph models these edges, creating
-hard structural gaps between the entry function and certain targets.
-These gaps set a hard upper bound on the reachable accuracy of any graph-only
-approach.
+Neither the compile-time nor the syntactic graph models these dynamic edges, creating
+structural gaps between the entry function and certain targets.
+While a pure graph traversal alone along static edges cannot reach these targets, an agent
+equipped with source-reading and symbol-search tools can in principle bridge the gap if
+given sufficient search budget.

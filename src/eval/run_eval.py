@@ -63,6 +63,9 @@ def main():
     ap.add_argument("--only", default="", help="comma list of question ids")
     ap.add_argument("--noctx-reps", type=int, default=3)
     ap.add_argument("--noctx-temp", type=float, default=0.7)
+    ap.add_argument("--reps", type=int, default=1, help="reps for non-NOCTX conditions")
+    ap.add_argument("--temp", type=float, default=None, help="override temperature for non-NOCTX conditions")
+    ap.add_argument("--max-turns", type=int, default=15, help="max turns for tool agent")
     ap.add_argument("--max-tokens", type=int, default=3000)
     ap.add_argument("--budget", type=int, default=6000)
     ap.add_argument("--out", default="")
@@ -73,7 +76,7 @@ def main():
     if only:
         qs = [q for q in qs if q["id"] in only]
     conds = [c for c in a.conds.split(",") if c]
-    llm = make_llm(a.config)
+    llm = make_llm(a.config, a.temp)
     model = llm.model
     llm_nc = make_llm(a.config, a.noctx_temp) if "NOCTX" in conds else None
     tag = re.sub(r"[^A-Za-z0-9._-]+", "_", model)
@@ -91,7 +94,7 @@ def main():
     n_ok = n_err = 0
     for cond in conds:
         for q in qs:
-            reps = a.noctx_reps if cond == "NOCTX" else 1
+            reps = a.noctx_reps if cond == "NOCTX" else a.reps
             for rep in range(1, reps + 1):
                 if (q["id"], cond, rep) in done:
                     continue
@@ -103,6 +106,7 @@ def main():
                     else:
                         res = run_tool_agent(llm, q["question"], ABL[cond][0] if cond in ABL else DBS[cond], a.root,
                                              ABL[cond][1] if cond in ABL else "full",
+                                             max_turns=a.max_turns,
                                              question_id=q["id"])
                 except LLMError as e:
                     n_err += 1

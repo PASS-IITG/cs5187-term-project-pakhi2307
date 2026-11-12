@@ -6,12 +6,14 @@ compile-time graph extracted with \clang~18.1.3 and a syntactic graph extracted
 with tree-sitter---improve LLM fault-localisation accuracy for six benchmark
 questions on two large language models (\qwen and \nemotron).
 We compare a tool-using agent that navigates the graph via function calling,
-a text-slice condition that injects a BFS subgraph into the prompt, and a
+a text-slice condition that injects a BFS subgraph into the user message, and a
 no-context baseline, together with four tool-ablation variants.
-Graph context rarely improves exact accuracy: 31\,\% of Qwen failure slots stem
-from function-pointer gaps that make the target structurally unreachable in both
-graphs, while 52\,\% are misdirections even when the target is a graph node.
-Text slices match the tool condition at ten to fifteen times lower token cost.
-Source-only retrieval consumes four to five times more tokens than full graph
-navigation with no accuracy gain, suggesting that edge-traversal tools add
-navigational value beyond raw source access.
+Graph context rarely improves exact accuracy under the 15-turn baseline: 15 of 48 answer
+slots (31\,\%) belong to two questions where the target function is separated by a function
+pointer; a pure graph traversal alone cannot reach them, though an agent with source-reading
+and search tools can sometimes bridge the gap under an extended turn budget.
+Of the remaining 43 wrong answers in the baseline, 58\,\% name a different graph-reachable function.
+Text slices match the 15-turn tool condition at about ten to twelve times lower token
+cost for \qwen and sixteen to twenty-three times lower for \nemotron.
+In sensitivity probes, doubling the turn cap to 30 enables \textsc{CT-TOOL} to locate both
+callback-separated targets on \qwen (reaching 2 of 5 exact answers), though at steep token cost.

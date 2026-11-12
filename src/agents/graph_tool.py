@@ -15,11 +15,18 @@ ABLATIONS = {
     "full": None,            # every tool the graph offers
     "source_only": set(),    # control: support tools only
 }
-# The last sentence is the stop rule added in the pilot (an ADD to disclose; identical for SYN-TOOL and CT-TOOL).
-TOOL_PROMPT = ("\n\nYou have tools to query a graph of this code and to read function source. "
-               "Verify every edge with a tool before asserting it. Cite only edges returned by tools. "
-               "If a name is unknown, call search_functions instead of guessing. "
-               "If the tools cannot identify the responsible function, give your best guess and finish.\n\n")
+# D17 prompt: guidance targeting observed failure modes without question-specific tailoring
+TOOL_PROMPT = ("\n\nYou have tools to query a graph of this code and to read function source.\n"
+               "Goal: The answer is the function whose code must change to fix the bug, not the function where the crash "
+               "or wrong output appears, and not a function that merely has a name matching the symptom keywords.\n"
+               "Guidelines:\n"
+               "- You have at most {max_turns} tool calls. As soon as you have a candidate function and a supporting call path, "
+               "stop and give the final JSON. Do not use all your turns.\n"
+               "- Before answering, read the source of your top candidate with get_function_source and check that its logic is wrong for the given input.\n"
+               "- Calls made through function pointers are not in the graph. If no direct path exists, search for where the function pointer or callback is set/registered.\n"
+               "- Cite only edges that tools returned. If a name is unknown, call search_functions instead of guessing.\n"
+               "- In your final JSON, provide one or two concise sentences in the explanation field.\n"
+               "- If the tools cannot identify the responsible function, give your best guess and finish.\n\n")
 
 
 # Harness rule (CONTRACT CHANGE 3 Nov, identical for SYN-TOOL and CT-TOOL): when the turn cap is reached without a
@@ -31,7 +38,8 @@ FORCE_PROMPT = ("You have used all your tool turns. Do not call any more tools. 
 def run_tool_agent(llm, question, db_path, root, variant="full", max_turns=15, **meta):
     allowed = None if ABLATIONS[variant] is None else ABLATIONS[variant] | SUPPORT
     tools = [{"type": "function", "function": s} for s in graph_tools.schemas(db_path, allowed)]
-    msgs = [{"role": "user", "content": question + TOOL_PROMPT + SPEC}]
+    prompt_text = TOOL_PROMPT.format(max_turns=max_turns)
+    msgs = [{"role": "user", "content": question + prompt_text + SPEC}]
     t0 = time.time()
     pt = ct = n_calls = turns = 0
     stopped, text = "iteration_cap", ""
@@ -56,6 +64,13 @@ def run_tool_agent(llm, question, db_path, root, variant="full", max_turns=15, *
                 out = {"error": "BAD_ARGUMENTS", "detail": str(e)}
             msgs.append({"role": "tool", "tool_call_id": c["id"],
                          "content": json.dumps(out, ensure_ascii=False)})
+
+        remaining = max_turns - (turn + 1)
+        if remaining > 0:
+            nudge = f"Tool calls left: {remaining}."
+            if turn >= (2 * max_turns) // 3:
+                nudge += " Start converging. If you have a candidate, stop and give the final JSON now."
+            msgs.append({"role": "user", "content": nudge})
     if stopped == "iteration_cap":
         msgs.append({"role": "user", "content": FORCE_PROMPT})
         r = llm.chat(msgs, tools=None, turn=max_turns, **meta)
