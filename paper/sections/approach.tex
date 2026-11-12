@@ -35,9 +35,8 @@ brace-matching or next-definition heuristic.
 \subsection{Tool Set}
 
 The two graphs expose different tool subsets (Table~\ref{tab:tools}).
-The CT graph supports all seven tools; the SYN graph supports the five tools
-that require only call edges and function source, since it contains no
-type-hierarchy or taint edges.
+CT supports all seven tools. SYN supports five, because it has no type or taint edges.
+Results are sorted and capped at 50 items; source output is capped at 8{,}000 characters per call, with paging for longer functions.
 All tools return \texttt{\{"result":~\ldots,~"truncated":~bool\}} or
 \texttt{\{"error":~CODE,~\ldots\}} and are exposed to the LLM as OpenAI
 function-calling schemas.
@@ -78,14 +77,10 @@ answer is therefore a forced final answer.
 
 \subsection{Text Slice (TEXT Conditions)}
 
-For the text conditions, a BFS from the entry function over \texttt{calls} edges
-serialises the call neighbourhood as plain text
-(\texttt{fn [file:line] calls: a, b, c}) within a token budget ceiling of
-$B=6{,}000$ tokens computed with the tiktoken \texttt{cl100k\_base} tokeniser.
-Because five of the six benchmark questions share \texttt{sqlite3Select} as their
-entry function, they share the identical pre-computed text slice
-(2{,}849 tokens on SYN, 4{,}405 tokens on CT).
-Only Q5 uses a different entry point (\texttt{sqlite3\_step}, 2{,}963 tokens on SYN, 5{,}982 tokens on CT).
+A breadth-first search from the entry function over \texttt{calls} edges serialises the call neighbourhood as text, one block per function, up to $B=6{,}000$ tokens (tiktoken \texttt{cl100k\_base}).
+Blocks are added whole and the slice stops before the first one that would exceed the ceiling.
+Five questions share \texttt{sqlite3Select} as entry, so they share one slice (2{,}849 tokens on SYN, 4{,}405 on CT, both complete).
+Q5 uses \texttt{sqlite3\_step} (2{,}963 tokens on SYN, 5{,}982 tokens on CT, cut by the ceiling).
 The slice is prepended to the user message, before the question text.
 The model answers in one turn without tool access.
 

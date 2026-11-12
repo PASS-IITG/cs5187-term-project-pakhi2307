@@ -11,10 +11,10 @@ We use \sqlite~3.30.1 (commit \texttt{25e9591}, tag \texttt{version-3.30.1}),
 a widely studied embedded SQL engine~\cite{sqlite}.
 We extract call graphs from eleven core C source files spanning tokenization,
 parsing, query planning, expression resolution, and virtual machine execution
-(348{,}852 tokens, approximately 31{,}000 lines of C).
-\sqlite is a suitable subject because its source is publicly available, it is
-used in real-world FL research, and its function-pointer-heavy dispatch tables
-directly expose the structural-gap challenge studied here.
+(348{,}852 tokens, about 31{,}000 lines of C).
+\sqlite's source is public and its dispatch relies on function pointers,
+which exposes the structural-gap problem studied here; its bugs are also public,
+which we discuss as a threat to validity (Section~\ref{sec:threats}).
 
 \paragraph{Benchmark.}
 We evaluate on six fault-localisation questions drawn from real SQLite bug fixes
@@ -37,11 +37,11 @@ The target functions span SQL query processing (\texttt{sqlite3Select},
 \sqlite relies extensively on function pointers stored in walker structs and callback tables.
 Neither the compile-time nor the syntactic graph models dynamic function-pointer dispatches.
 Consequently, two targets---\texttt{resolveOrderByTermToExprList} (Q1) and
-\texttt{withExpand} (Q4)---are present as nodes in the graph databases but are
-unreachable along static \texttt{calls} edges from the entry function (\texttt{sqlite3Select}).
+\texttt{withExpand} (Q4)---are present as nodes in both graph databases but are
+unreachable from the entry function along static call edges, because control reaches
+them through function pointers.
 A third question (Q5, \texttt{sqlite3\_str\_vappendf}) also executes through a function
 pointer at runtime; in the static call graph, it is topologically reachable only via an
 unrelated error-logging route rather than the active data path.
-While a pure static edge traversal cannot reach these targets along genuine call chains,
-an agent equipped with symbol search and source reading can in principle locate them
-if granted sufficient search budget.
+These gaps bound what pure edge traversal can reach; however, an agent equipped with
+symbol search and source reading can in principle locate them if granted sufficient search budget.
