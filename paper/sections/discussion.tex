@@ -1,7 +1,7 @@
 \section{Discussion}
 \label{sec:discussion}
 
-\paragraph{Graph completeness and tool synergy.}
+\paragraph{Graph completeness and tool interaction.}
 The 31\,\% of baseline slots attributable to callback gaps illustrates the penalty
 imposed when static call graphs omit function-pointer dispatches.
 Under a standard 15-turn traversal, targets separated by callback boundaries remained
@@ -9,26 +9,29 @@ unreached.
 However, our sensitivity analysis revealed that graph tools do not operate in a vacuum:
 given an expanded 30-turn budget, \textsc{CT-TOOL} combined graph exploration with symbol
 searches and source inspection to locate both Q1 and Q4.
-Thus, static graph gaps represent a formidable barrier for pure edge traversals,
+Because we did not evaluate a 30-turn source-only baseline, we cannot attribute these gains
+specifically to the graph tools rather than to symbol search and raw source reading.
+Thus, static graph gaps bound what pure edge traversal can reach,
 though hybrid agents equipped with source inspection can partially bridge them at
 substantial token expense.
 
 \paragraph{Compile-time vs.\ syntactic call graphs.}
 A central empirical question is whether compiler-grade extraction (\clang) outperforms
 lightweight syntactic extraction (tree-sitter).
-Our results show no measurable difference in fault-localisation accuracy: \textsc{CT} and
-\textsc{SYN} achieved identical exact accuracy in the \textsc{TEXT} conditions and differed by
+Our results show no detectable difference in fault-localisation accuracy: \textsc{CT} and
+\textsc{SYN} achieved identical exact accuracy in the \textsc{TEXT} conditions (excluding Q2) and differed by
 only one question in the \textsc{TOOL} conditions (\qwen: SYN 1, CT 0; \nemotron: 1 each).
-While \clang extracted 2{,}438 call-site edges with argument bindings compared to 772 unique
-call pairs in \texttt{graphify}, the additional compiler precision did not translate into
-higher localisation accuracy on this benchmark.
+\clang recorded 2{,}438 call-site edges (1{,}593 distinct caller--callee pairs, including calls
+into external library functions) compared to 772 unique pairs in \texttt{graphify}; the CT count
+includes boundary functions and the two counts are not strictly comparable, but the additional
+compiler precision did not translate into higher localisation accuracy on this benchmark.
 
 \paragraph{Text slices vs.\ interactive tool navigation.}
 Text slices match or exceed tool conditions in exact accuracy at a fraction of
 the token cost (3{,}400--5{,}500 tokens vs.\ 39{,}474--86{,}373 for tool conditions;
 10--12$\times$ for Qwen, 16--23$\times$ for Nemotron).
-In top-3 coverage, tool conditions are equal or strictly higher in three of four
-comparisons, though the margin is only a single question.
+In top-3 coverage, tool conditions are at least as good as text slices in all four
+comparisons, and strictly better in three, though the margin is only a single question.
 For Q5 on \qwen, the BFS slice happens to include
 \texttt{sqlite3\_str\_vappendf} at shallow depth, while the tool agent
 stops at a callee one hop deeper (\texttt{printfTempBuf}).
@@ -47,14 +50,10 @@ citing edges that actually exist in the graph, even when those tools do not
 change the final answer.
 
 \paragraph{Majority consensus and candidate comparison.}
-Taking a simple majority consensus ($2/3$) across the three sensitivity repetitions
-yields consistent majority predictions on two benchmark answers: Q1 on \textsc{CT-TOOL} (2 of 3 votes for
-\texttt{resolveOrderByTermToExprList}) and Q5 on \textsc{SYN-TOOL} (2 of 3 votes for
-\texttt{sqlite3\_str\_vappendf}).
-While three samples do not establish statistical proof, this observation indicates that
-sampling multiple trajectories with majority consensus can filter out transient misdirections
-(such as naming \texttt{walkWindowList} or \texttt{printfTempBuf}).
+Taking the 2-of-3 majority gives the correct answer for Q5 on \textsc{SYN-TOOL} and Q1 on
+\textsc{CT-TOOL} (1 of 5 per graph), no better than the single-run baseline.
+Three samples are too few to say whether voting helps.
 Furthermore, qualitative inspection of failed trajectories suggests that prompting the
 agent to explicitly compare two or three candidate functions before committing---rather
-than selecting the first symptom-matching name such as \texttt{codeDistinct}---would
-further reduce false positives.
+than selecting the first symptom-matching name such as \texttt{codeDistinct}---might
+reduce false positives.

@@ -8,13 +8,13 @@ We parse eleven \sqlite{} C files with \clang~18.1.3 via libclang, recording
 every direct function call with its source location, argument identifiers, and
 return-value assignments.
 The resulting graph \textsc{CT-v1} has 417 defined functions, 392 external (boundary) functions,
-94 struct/union types, 954 fields, and 2{,}438 call-site edges stored in a SQLite database using
+94 struct/union types, 954 fields, and 2{,}438 call-site edges (1{,}593 distinct caller--callee pairs, including calls into external functions) stored in a SQLite database using
 a shared schema (\texttt{nodes} and \texttt{edges} tables).
 Forty indirect (function-pointer) calls are recorded in node metadata but not as edges.
 A lightweight taint pass propagates three source patterns
-(\texttt{sqlite3\_prepare*}, \texttt{sqlite3\_bind\_text*}, \texttt{sqlite3\_bind\_blob*}) across 11 matched source functions
-to 16 sink functions in three classes (copy, alloc, free) via depth-limited depth-first search ($K=6$),
-adding 84 \texttt{taint\_reaches} edges to produce \textsc{CT-v2}.
+(\texttt{sqlite3\_prepare*}, \texttt{sqlite3\_bind\_text*}, \texttt{sqlite3\_bind\_blob*}) from 11 source functions
+to the sink functions in three classes (copy, alloc, free); of the 16 sinks defined, 6 are reached.
+Depth-limited search ($K=6$) adds 84 \texttt{taint\_reaches} edge records (41 distinct source--sink pairs) to produce \textsc{CT-v2}.
 Struct and union fields are stored separately as \texttt{has\_field\_of\_type} edges for type-hierarchy queries.
 The taint pass is a purely syntactic over-approximation: it does not model aliasing, pointer arithmetic, or global state.
 Taint edges were not hand-validated on the final graph and no result relies on them.
@@ -36,7 +36,7 @@ brace-matching or next-definition heuristic.
 
 The two graphs expose different tool subsets (Table~\ref{tab:tools}).
 CT supports all seven tools. SYN supports five, because it has no type or taint edges.
-Results are sorted and capped at 50 items; source output is capped at 8{,}000 characters per call, with paging for longer functions.
+Results are sorted and capped at 50 items; source output is capped at 8{,}000 characters (roughly 100--200 lines) per call, with paging for longer functions.
 All tools return \texttt{\{"result":~\ldots,~"truncated":~bool\}} or
 \texttt{\{"error":~CODE,~\ldots\}} and are exposed to the LLM as OpenAI
 function-calling schemas.

@@ -22,7 +22,7 @@ Q2 included ($n{=}6$) across both models for transparency.
 \begin{table}[h]
 \caption{Accuracy per condition. Primary analysis excludes Q2 ($n=5$); full benchmark includes Q2 ($n=6$).
   Dashes denote ablation subsets not evaluated on Nemotron due to API failures.
-  NOCTX top-3 counts questions with $\ge$1 top-3 hit across 3 repeats.}
+  NOCTX exact and top-3 counts reflect questions with $\ge$1 hit across 3 repeats.}
 \label{tab:accuracy}
 \small
 \begin{tabular}{lrr|rr|rr|rr}
@@ -57,14 +57,21 @@ In the no-context baseline, excluding Q2 yields 0 of 15 exact runs on \qwen and 
 including Q2 yields 3 of 18 exact runs on \qwen{} (all Q2) and 1 of 18 on \nemotron.
 Providing graph context does not reliably improve exact accuracy in the 15-turn baseline.
 
-\subsection{RQ2: Tool vs.\ Text Slice}
+\subsection{RQ2: Compile-Time vs.\ Syntactic Graph Extraction}
+\label{sec:rq2}
+
+Under the 15-turn baseline the two graphs differ by at most one question.
+Excluding Q2, \textsc{SYN-TEXT} and \textsc{CT-TEXT} each score 1 of 5; on \qwen, \textsc{SYN-TOOL} scores 1 and \textsc{CT-TOOL} 0; on \nemotron both score 1.
+We find no detectable difference; with six questions we cannot claim equivalence.
+
+\subsection{RQ3: Tool vs.\ Text Slice}
 
 In exact accuracy, text slices match or exceed tool conditions in the 15-turn baseline:
 for \qwen{} ($n{=}5$), \textsc{SYN-TEXT} and \textsc{CT-TEXT} each score one exact answer (Q5),
 matching \textsc{SYN-TOOL} (Q1) and exceeding \textsc{CT-TOOL} (zero exact).
 For \nemotron{}, all four graph conditions achieve one exact answer (Q5).
-In top-3 accuracy, tool conditions are equal to or strictly higher than text slices in three
-of the four comparisons (e.g., Nemotron \textsc{SYN-TOOL} achieves 4 of 6 top-3 hits vs.\ 3 of 6
+In top-3 accuracy, tool conditions are at least as good as text slices in all four
+comparisons, and strictly better in three (e.g., Nemotron \textsc{SYN-TOOL} achieves 4 of 6 top-3 hits vs.\ 3 of 6
 for \textsc{SYN-TEXT}, and Qwen \textsc{SYN-TOOL} achieves 2 of 5 vs.\ 1 of 5 for \textsc{SYN-TEXT}),
 though these differences represent only single-question margins.
 
@@ -83,6 +90,7 @@ fully consuming the turn budget.
 
 \begin{table}[h]
 \caption{Measured prompt tokens, completion tokens, and latency across all conditions for both models.
+  Tool-condition prompt tokens are cumulative across turns (not a single context window).
   Dashes denote ablation conditions not evaluated on Nemotron.}
 \label{tab:cost}
 \small
@@ -144,7 +152,7 @@ Answers naming \texttt{sqlite3Select} on Q3 and Q6 fall into this category becau
 \paragraph{Not in graph (0 of 48 slots).}
 Every ground-truth function is present as a node in both graph databases.
 
-\subsection{RQ3: Tool Ablation}
+\subsection{RQ4: Tool Ablation}
 
 No ablation condition scored above zero exact answers on \qwen's five unflagged
 questions (Table~\ref{tab:accuracy}), and every ablation run hit the 15-turn cap.
@@ -152,12 +160,12 @@ Adding callers, callees, type hierarchy, and taint paths to the source-reading
 baseline did not improve exact accuracy on these five questions.
 However, the source-only control incurred severe token inflation: consuming an average of
 208{,}833 tokens on CT and 210{,}621 tokens on SYN, source-only cost roughly 4$\times$ more
-than full tool navigation (54{,}442 tokens on CT) and 40--61$\times$ more than text slices
+than full tool navigation (54{,}442 tokens on CT) and 40--62$\times$ more than text slices
 (5{,}208 on CT-TEXT, 3{,}401 on SYN-TEXT).
-Without callers or callees to narrow the candidate space, the model paged through raw
-source lines on every turn until hitting the iteration cap.
+Without callers or callees to narrow the candidate space, the model largely paged through raw
+source lines until hitting the iteration cap.
 
-\subsection{RQ4: Edge-Citation Validity}
+\subsection{RQ5: Edge-Citation Validity}
 
 Every cited edge (\texttt{src}, \texttt{dst}, \texttt{kind}) and every
 consecutive evidence-path pair from all 36 \qwen{} tool-condition runs were
@@ -168,15 +176,17 @@ reverse direction appears in the graph; because neither graph models function-po
 calls, an absent edge may reflect a genuine structural gap rather than model fabrication,
 so this rate represents an upper bound on hallucination.
 
-Of 133 cited edges, 106 (79\,\%) are present exactly as stated and 4 (3\,\%)
+Of 133 cited edges, 106 (80\,\%) are present exactly as stated and 4 (3\,\%)
 have direction reversed.
 The rate of edges not supported by the graph was 2.4$\times$ lower in conditions with
 caller/callee tools (12\,\%, 10 of 86 edges) than in source-only conditions (28\,\%, 13 of 47
 edges).
-Evidence-path pairs show an identical trend (14\,\% vs.\ 35\,\%).
+Evidence-path pairs show a similar trend (14\,\% vs.\ 35\,\%).
 This descriptive association indicates that edge-traversal tools ground the agent's cited
 reasoning paths to verifiable edges, whereas source-only agents frequently cite edges
 not supported by the underlying call graph.
+Because these tools return graph edges, citing in-graph edges is expected by construction;
+the gap mainly shows that source-only agents infer edges the graph does not hold.
 Notably, the single \qwen{} run that correctly answered Q1 under the 15-turn baseline
 (\textsc{SYN-TOOL}) still cited an edge not supported by the graph, spanning the
 function-pointer gap; an exact answer does not ensure a fully verified reasoning chain.
@@ -198,25 +208,26 @@ We updated the tool prompt to provide a per-turn countdown (\emph{``Tool calls l
 and a convergence nudge at two-thirds budget (\emph{``Start converging. If you have a candidate, answer now''}).
 Under this 15-turn configuration, 4 of 12 runs concluded with \texttt{stop=final} on their
 own without invoking the forced final prompt.
-These 12 runs scored 0 exact (0 excluding Q2).
+These 12 runs scored 0 of 12 exact.
 
 \paragraph{Extended search horizon with 3 repetitions (30 turns, $T=0.7$).}
 To evaluate whether performance gains were stable or stochastic, we ran 3 sampled repetitions
 per question at temperature~0.7 with a 30-turn cap and the refined guidance prompt (36 runs total).
-The results show marked differences from the baseline:
+The results show:
 \begin{itemize}
   \item \textbf{Autonomous termination}: Rather than hitting the turn cap indiscriminately,
     \textbf{26 of 36 runs (72\,\%)} terminated autonomously with \texttt{stop=final},
-    frequently concluding between turns 22 and 26.
+    with several runs concluding between turns 22 and 26.
   \item \textbf{Callback-gap targets reached}: On \textsc{CT-TOOL}, \texttt{resolveOrderByTermToExprList} (Q1)
     was solved in \textbf{2 of 3 repetitions} (67\,\% consistency).
-    Crucially, \texttt{withExpand} (Q4)---which was never solved by any condition or model in the
+    Notably, \texttt{withExpand} (Q4)---which was never solved by any condition or model in the
     15-turn baseline---was identified on \textbf{both graphs} (1 of 3 runs on \textsc{SYN-TOOL},
     and 1 of 3 runs on \textsc{CT-TOOL}).
-  \item \textbf{Overall accuracy}: Excluding flagged Q2, both graphs achieved an identical
-    per-run exact accuracy of 20\,\% (3 of 15 runs correct on \textsc{SYN-TOOL}: Q4 in 1 of 3, Q5 in 2 of 3;
-    3 of 15 runs correct on \textsc{CT-TOOL}: Q1 in 2 of 3, Q4 in 1 of 3). Across the full 6 questions,
-    top-3 coverage reached 100\,\% on Q2 (both graphs) and Q5 (\textsc{SYN-TOOL}), and 67\,\% on Q1 and Q5 (\textsc{CT-TOOL}).
+  \item \textbf{Overall accuracy}: Excluding Q2, per-run exact accuracy was 20\,\% on both graphs
+    (3 of 15 each). The 15-turn baseline was 1 of 5 on \textsc{SYN-TOOL} and 0 of 5 on \textsc{CT-TOOL},
+    so the overall rate barely moved. What changed was which questions were solved, notably Q4,
+    which no baseline condition solved. Across the full 6 questions, top-3 coverage reached 100\,\%
+    on Q2 (both graphs) and Q5 (\textsc{SYN-TOOL}), and 67\,\% on Q1 and Q5 (\textsc{CT-TOOL}).
 \end{itemize}
 
 \paragraph{Goal-wording control experiment.}
@@ -227,7 +238,7 @@ The goal wording alone failed to solve Q1 or Q4 in any condition: both text slic
 0 of 1 on Q1 and Q4, and \textsc{NOCTX} defaulted to answering \texttt{sqlite3Select} on 5 of 6
 questions.
 This suggests that discovering \texttt{resolveOrderByTermToExprList} (Q1) and \texttt{withExpand}
-(Q4) in the extended tool runs was facilitated by interactive tool traversal and source reading,
+(Q4) in the extended tool runs was aided by interactive tool traversal and source reading,
 rather than prompt phrasing alone.
 
 \paragraph{Methodological takeaways.}
@@ -236,8 +247,10 @@ optimistic bias, and the additional navigation depth incurs substantial token co
 (averaging 270{,}512 prompt tokens on CT and 286{,}523 on SYN).
 Furthermore, on a six-question benchmark, the 3 of 15 per-run accuracy on both graphs represents
 a modest absolute count that warrants cautious interpretation.
+We did not run a 30-turn source-only condition, so we cannot attribute the gains to the
+graph tools rather than to symbol search and source reading.
 Nonetheless, the sensitivity experiments suggest that: (i)~a longer turn budget together with the
 revised prompt allowed some callback-separated targets to be reached (the effect of the cap alone
-was not isolated), (ii)~turn countdown visibility effectively curtails unbounded exploration, and
+was not isolated), (ii)~turn countdown visibility was associated with earlier stopping, and
 (iii)~static function-pointer gaps do not represent an insurmountable ceiling when agents can
 inspect source and search symbol definitions.

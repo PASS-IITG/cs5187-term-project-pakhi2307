@@ -18,21 +18,19 @@ and Q2 in all three repeats, which may reflect prior knowledge or cues in the qu
 All 48 baseline tool-condition runs (36 from \qwen{}, comprising 12 full-tool and 24 ablation runs,
 and 12 from \nemotron{}) hit the 15-turn cap; every baseline tool answer is
 therefore a forced final answer rather than a model-initiated termination.
-Our sensitivity probes (Section~\ref{sec:turn_horizon}) confirm that turn truncation was a
-limiting factor: extending the budget enabled both tool conditions to solve additional targets
-(including Q4, previously unsolved) and prompted earlier autonomous terminations.
+Our sensitivity probes (Section~\ref{sec:turn_horizon}) are consistent with turn truncation being a limiting factor, though the prompt revision changed at the same time and the cap alone was not isolated: extending the budget enabled both tool conditions to solve additional targets (notably Q4, previously unsolved) and was associated with earlier autonomous terminations.
 \emph{Tool delivery and source granularity confounds.}
 The comparison between TOOL and TEXT conditions carries a delivery confound:
 tool-condition agents can read raw function bodies via \texttt{get\_function\_source},
 whereas text-condition models see only call relationships and signatures in the slice.
-Furthermore, \texttt{get\_function\_source} paginates at approximately 100 lines per call;
-for large functions such as \texttt{sqlite3Select} ($>$1{,}500 lines), reading the complete body
+Furthermore, \texttt{get\_function\_source} paginates at 8{,}000 characters (roughly 100--200 lines) per call;
+for large functions such as \texttt{sqlite3Select} ($>$1{,}000 lines), reading the complete body
 consumes multiple turns, potentially biasing the agent toward superficial inspection of monolithic functions.
 A $(+\text{src})$ text variant injecting full function source was not evaluated.
 \emph{Unevaluated graph features.}
 None of the six benchmark questions specifically concerns a taint vulnerability or struct field hierarchy bug.
 Consequently, the \texttt{get\_type\_hierarchy} and \texttt{get\_taint\_paths} tools, along with the
-84 compile-time \texttt{taint\_reaches} edges, were never queried by the benchmark questions.
+84 compile-time \texttt{taint\_reaches} edges, are not targeted by any of the six questions.
 \emph{Nemotron ablation exclusion.}
 When evaluating \nemotron{} on tool-ablation subsets, the NVIDIA API repeatedly returned
 empty responses, short non-JSON strings, or malformed outputs across queries.
@@ -41,21 +39,23 @@ are reported for \qwen{} only.
 \emph{Hosting differences and output truncation.}
 \qwen was served locally via LM Studio (the local model's quantisation level was not recorded), whereas \nemotron was accessed via hosted inference; quantization artefacts may affect reasoning precision.
 Under \nemotron \textsc{SYN-TEXT} on Q1, the response exceeded the 3{,}000 completion-token limit
-and truncated mid-stream, producing an invalid JSON parse (accounting for the 5 of 6 valid JSON count
-in Table~\ref{tab:cost}).
+and truncated mid-stream, producing an invalid JSON parse; this run is counted as a miss,
+which lowers \nemotron \textsc{SYN-TEXT}'s top-3 count in Table~\ref{tab:accuracy}.
 \emph{Condition comparability.}
 The TEXT conditions are not token-matched: SYN slices are smaller than CT slices (2{,}849 vs.\ 4{,}405 tokens for \texttt{sqlite3Select}).
 In addition, \textsc{SYN-TOOL} had 5 tools and \textsc{CT-TOOL} 7; 310 of the SYN graph's 772 call edges were inferred by heuristic.
 \emph{Sample size and variance.}
 With six questions and one run per baseline condition at temperature~0, no variance estimate is available, and a one-question difference is not evidence of a systematic effect.
 \emph{Ground truth determination and fix-build verification.}
-For Q3 and Q4 the bug was reproduced on the vulnerable build, but the fix-build differential
-was not run; the ground truth follows the fault-site rule (D14) and was agreed by both authors.
-For Q4 the upstream fix also modifies \texttt{sqlite3ErrorMsg}, which is outside the analysed files.
+As noted in Section~\ref{sec:problem}, for Q3 and Q4 the bug was reproduced on the vulnerable build,
+but the fix-build differential was not run; ground truth follows decision-log rule D14 and was agreed
+by both authors (for Q4 the upstream fix also modifies \texttt{sqlite3ErrorMsg}, outside the analysed files).
 
 \paragraph{External validity.}
 Our study covers one codebase (\sqlite~3.30.1), six benchmark questions, and
 two models.
+Five of the six benchmark questions share one entry function (\texttt{sqlite3Select}) and half involve callbacks.
+The 31\,\% callback-gap share is therefore not representative of SQLite as a whole.
 Results may not generalise to other programming languages, codebase scales, bug classes,
 or LLM architectures.
 \sqlite's function-pointer-heavy architecture means the callback-gap failure

@@ -6,7 +6,7 @@ SBFL methods rank statements or functions by suspiciousness scores derived from
 pass/fail test-coverage data.
 Tarantula~\cite{jones05tarantula} introduced the coefficient refined by many
 later techniques.
-A comprehensive survey is given by \citet{wong16survey}.
+A broad survey is given by \citet{wong16survey}.
 Our work differs fundamentally: we use neither test suites nor execution coverage;
 the LLM reasons directly from a natural-language symptom description and optional
 call-graph context.
@@ -26,12 +26,11 @@ Recent work investigates how large language models can navigate repository-scale
 codebases using structured tools.
 Most closely related to our agent architecture, \citet{yildiz25jitvul} introduce
 the JitVul benchmark, deploying ReAct-style agents equipped with interprocedural
-navigation tools (\texttt{get\_callers}, \texttt{get\_callees}, and definition retrieval)
-to detect vulnerabilities in C repositories.
-In an empirical investigation of context engineering, \citet{contextengineering24}
+context to detect vulnerabilities in C repositories.
+In an empirical investigation of context engineering, \citet{li26onesize}
 demonstrate that ``one size does not fit all'' when retrieving repository context:
-while navigation-based agents dynamically explore dependencies, they incur a
-10--20$\times$ computational cost penalty compared to static context injection.
+while navigation-based agents dynamically explore dependencies, navigation-based
+approaches incur 10--20$\times$ higher cost.
 Our empirical findings directly mirror this cost trade-off, showing a 10--23$\times$
 prompt-token multiplier for tool-navigating agents over static BFS text slices, while
 providing an edge-level audit of the structural gaps and cited edge validity
@@ -40,7 +39,7 @@ inherent to static call graphs on large C systems.
 \paragraph{LLM agents with structured tool use.}
 The \textsc{ReAct} framework~\cite{yao23react} established the
 reason-act-observe pattern for autonomous tool-using agents.
-We apply this paradigm to static call-graph exploration, ablating the available
+We apply this pattern to static call-graph exploration, ablating the available
 tool primitives (call chains, type hierarchies, taint paths, raw source retrieval)
 to isolate which specific tools assist localisation and whether tool access reduces
 the citing of edges not supported by the underlying call graph.

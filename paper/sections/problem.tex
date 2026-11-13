@@ -20,12 +20,12 @@ which we discuss as a threat to validity (Section~\ref{sec:threats}).
 We evaluate on six fault-localisation questions drawn from real SQLite bug fixes
 committed after version 3.30.1.
 Each bug was reproduced on the 3.30.1 snapshot with call chains manually verified.
-For Q3 and Q4 the bug was reproduced on the vulnerable build, but the fix-build differential
-was not run; the ground truth follows the fault-site rule (D14) and was agreed by both authors.
-For Q4 the upstream fix also modifies \texttt{sqlite3ErrorMsg}, which is outside the analysed files.
-Following our pre-registered protocol (D14), the ground truth is strictly defined as
+Following decision-log rule D14, the ground truth is strictly defined as
 the \emph{fault site}---the function modified in the upstream fix patch---rather than
 the downstream crash or assertion site.
+For Q3 and Q4 the bug was reproduced on the vulnerable build, but the fix-build differential
+was not run; ground truth follows D14 and was agreed by both authors (for Q4 the upstream fix
+also modifies \texttt{sqlite3ErrorMsg}, which is outside the analysed files).
 Prompts use symptom-only wording and name only the entry function, never the answer function (for Q2 the two coincide, see \S5.2).
 The target functions span SQL query processing (\texttt{sqlite3Select},
 \texttt{flattenSubquery}, \texttt{withExpand}), string formatting
